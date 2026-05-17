@@ -183,6 +183,7 @@ server <- function(input, output, session) {
     eligibility    = NULL,
     posterior_df   = NULL,
     error_msg      = NULL,
+    run_error      = NULL,
     loading_hpo    = FALSE
   )
 
@@ -239,6 +240,8 @@ server <- function(input, output, session) {
 
   # ── Run analysis ───────────────────────────────────────────────────────────
   observeEvent(input$run_analysis, {
+    rv$run_error <- NULL
+
     terms <- confirmed_terms()
     req(length(terms) >= 3)
 
@@ -249,36 +252,40 @@ server <- function(input, output, session) {
     xrenal_val <- if ("None" %in% input$extra_renal || length(input$extra_renal) == 0)
                     character(0) else input$extra_renal
 
-    # Eligibility
-    rv$eligibility <- run_eligibility_all_panels(
-      panels            = renal_panels,
-      strict_criteria   = panel_strict_criteria,
-      confirmed_hpo_ids = confirmed_ids,
-      age               = age_val,
-      sex               = input$sex,
-      proteinuria       = input$proteinuria,
-      haematuria        = input$haematuria,
-      family_history    = input$family_history,
-      extra_renal       = xrenal_val,
-      egfr              = egfr_val,
-      consanguinity     = input$consanguinity
-    )
+    tryCatch({
+      # Eligibility
+      rv$eligibility <- run_eligibility_all_panels(
+        panels            = renal_panels,
+        strict_criteria   = panel_strict_criteria,
+        confirmed_hpo_ids = confirmed_ids,
+        age               = age_val,
+        sex               = input$sex,
+        proteinuria       = input$proteinuria,
+        haematuria        = input$haematuria,
+        family_history    = input$family_history,
+        extra_renal       = xrenal_val,
+        egfr              = egfr_val,
+        consanguinity     = input$consanguinity
+      )
 
-    # Bayesian update
-    rv$posterior_df <- run_bayesian_update(
-      confirmed_hpo_ids       = confirmed_ids,
-      age                     = age_val,
-      family_history          = input$family_history,
-      consanguinity           = input$consanguinity,
-      condition_priors        = condition_priors,
-      hpo_lr_positive         = hpo_lr_positive,
-      hpo_lr_negative         = hpo_lr_negative,
-      family_history_modifiers = family_history_modifiers,
-      consanguinity_modifiers  = consanguinity_modifiers,
-      age_modifier_fn         = age_modifier
-    )
+      # Bayesian update
+      rv$posterior_df <- run_bayesian_update(
+        confirmed_hpo_ids       = confirmed_ids,
+        age                     = age_val,
+        family_history          = input$family_history,
+        consanguinity           = input$consanguinity,
+        condition_priors        = condition_priors,
+        hpo_lr_positive         = hpo_lr_positive,
+        hpo_lr_negative         = hpo_lr_negative,
+        family_history_modifiers = family_history_modifiers,
+        consanguinity_modifiers  = consanguinity_modifiers,
+        age_modifier_fn         = age_modifier
+      )
 
-    rv$analysis_done <- TRUE
+      rv$analysis_done <- TRUE
+    }, error = function(e) {
+      rv$run_error <- conditionMessage(e)
+    })
   })
 
   # ── HPO section UI ─────────────────────────────────────────────────────────
@@ -358,6 +365,18 @@ server <- function(input, output, session) {
 
   # ── Output panel UI ────────────────────────────────────────────────────────
   output$output_section <- renderUI({
+    if (!is.null(rv$run_error)) {
+      return(tags$div(
+        class = "alert alert-danger mt-3",
+        tags$strong("Analysis error: "),
+        tags$br(),
+        tags$code(rv$run_error),
+        tags$br(),
+        tags$small(class = "text-muted",
+                   "Please copy this error and report it. Check the RStudio console for the full traceback.")
+      ))
+    }
+
     if (!rv$analysis_done) {
       return(tags$div(
         class = "output-placeholder",
@@ -433,7 +452,7 @@ server <- function(input, output, session) {
 
       make_pills <- function(items, cls) {
         if (length(items) == 0) return(NULL)
-        lapply(items, function(x) tags$span(class = cls, x))
+        do.call(tagList, lapply(items, function(x) tags$span(class = cls, x)))
       }
 
       strict_detail <- tags$details(

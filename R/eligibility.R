@@ -38,13 +38,13 @@ check_strict_layer <- function(strict, confirmed_hpo_ids, age, egfr,
   any_desc     <- lapply(strict$any_of, `[[`, "description")
   any_assess   <- sapply(strict$any_of, `[[`, "assessable")
 
-  # Classify each
-  req_met      <- sapply(req_results, isTRUE)
-  req_failed   <- sapply(req_results, isFALSE)
+  # Classify each (vapply guarantees logical vector even for empty lists)
+  req_met      <- vapply(req_results, isTRUE,  logical(1))
+  req_failed   <- vapply(req_results, isFALSE, logical(1))
   req_unknown  <- is.na(unlist(req_results))
 
-  any_met      <- sapply(any_results, isTRUE)
-  any_failed   <- sapply(any_results, isFALSE)
+  any_met      <- vapply(any_results, isTRUE,  logical(1))
+  any_failed   <- vapply(any_results, isFALSE, logical(1))
   any_unknown  <- is.na(unlist(any_results))
 
   # Strict gate
@@ -240,10 +240,10 @@ eligibility_icon <- function(label) {
 
 strict_icon <- function(result) {
   switch(result,
-    "met"     = "✅",   # green tick
-    "partial" = "⚠️",  # warning
-    "not_met" = "❌",   # red cross
-    "❓"
+    "met"     = "✅",       # ✅ green tick
+    "partial" = "⚠️", # ⚠️ warning
+    "not_met" = "❌",       # ❌ red cross
+    "❓"                    # ❓ question mark
   )
 }
 
