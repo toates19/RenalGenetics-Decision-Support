@@ -42,7 +42,7 @@ app_theme <- bs_theme(
     .disclaimer-footer { background:#fff3cd; border-top:2px solid #ffc107;
                          padding:12px 20px; font-size:.78rem; color:#5a4200; }
     .section-label { font-weight:600; color:#1a6fa8; font-size:.82rem;
-                     text-transform:uppercase; letter-spacing:.04em; margin-top:14px; }
+                     text-transform:uppercase; letter-spacing:.04em; margin-top:6px; margin-bottom:4px; }
     .output-placeholder { color:#8a99aa; font-style:italic; text-align:center;
                           padding:40px 0; }
     .criteria-pill { display:inline-block; background:#e8f5e9; border:1px solid #81c784;
@@ -52,17 +52,40 @@ app_theme <- bs_theme(
     .criteria-pill.unknown { background:#fff8e1; border-color:#ffc107; color:#5a4200; }
     .summary-box { background:#e8f1fa; border-left:4px solid #1a6fa8;
                    padding:10px 14px; border-radius:4px; margin-bottom:12px; }
+    /* Accordion section styling */
+    .form-section { border:1px solid #d1dce8; border-radius:6px; margin-bottom:6px; }
+    .form-section summary {
+      list-style:none; padding:7px 10px; cursor:pointer;
+      font-weight:600; font-size:.82rem; color:#1a6fa8;
+      background:#f0f5fb; border-radius:6px;
+      display:flex; align-items:center; gap:6px;
+    }
+    .form-section summary::-webkit-details-marker { display:none; }
+    .form-section[open] > summary { border-radius:6px 6px 0 0; border-bottom:1px solid #d1dce8; }
+    .form-section .section-body { padding:8px 10px; }
     details > summary { list-style:none; }
     details > summary::-webkit-details-marker { display:none; }
     details[open] > summary { color:#1a6fa8; }
   ")
+
+# ── Helper: collapsible form section ─────────────────────────────────────────
+form_section <- function(icon_char, title, ..., open = FALSE) {
+  args <- if (open) list(open = NA) else list()
+  do.call(tags$details, c(
+    args,
+    list(
+      class = "form-section",
+      tags$summary(icon_char, " ", title),
+      tags$div(class = "section-body", ...)
+    )
+  ))
+}
 
 # ── UI ────────────────────────────────────────────────────────────────────────
 ui <- page_fillable(
   theme = app_theme,
   title = "RenalGenetics Decision Support",
 
-  # Navbar
   tags$nav(
     class = "navbar navbar-expand-lg mb-0",
     style = "background:#1a6fa8; padding:8px 20px;",
@@ -78,86 +101,131 @@ ui <- page_fillable(
     )
   ),
 
-  # Main layout
   layout_sidebar(
     fillable = TRUE,
     sidebar = sidebar(
       width = 380,
       open  = TRUE,
       bg    = "#ffffff",
-      style = "overflow-y:auto; height:calc(100vh - 56px); padding:14px;",
+      style = "overflow-y:auto; height:calc(100vh - 56px); padding:10px;",
 
-      # ── Step 1 ──────────────────────────────────────────────────────────────
-      tags$div(class = "section-label", "Step 1 — Clinical Information"),
+      # ── Demographics ───────────────────────────────────────────────────────
+      form_section("\U1F9D1", "Demographics", open = TRUE,
+        fluidRow(
+          column(6, numericInput("age", "Age at presentation (yrs)",
+                                 value = NA, min = 0, max = 120)),
+          column(6, selectInput("sex", "Sex",
+                                choices = c("Unknown", "Male", "Female")))
+        )
+      ),
 
-      tags$div(
-        tags$label("Clinical vignette", class = "form-label fw-semibold"),
+      # ── Renal presentation ─────────────────────────────────────────────────
+      form_section("\U1FAB8", "Renal presentation", open = TRUE,
+        fluidRow(
+          column(6, numericInput("egfr", "eGFR (ml/min/1.73m²)",
+                                 value = NA, min = 0, max = 200)),
+          column(6, selectInput("proteinuria", "Proteinuria",
+                                choices = c("None", "Sub-nephrotic", "Nephrotic-range")))
+        ),
+        selectInput("haematuria", "Haematuria",
+                    choices = c("None", "Microscopic", "Macroscopic"))
+      ),
+
+      # ── Investigations ─────────────────────────────────────────────────────
+      form_section("\U1F52C", "Investigations (biopsy findings)",
+        tags$p(style = "font-size:.8rem; color:#6c757d; margin-bottom:6px;",
+               "Tick all findings confirmed on renal biopsy."),
+        checkboxGroupInput("biopsy_results", label = NULL,
+          choices = c(
+            "FSGS or diffuse mesangial sclerosis",
+            "Alport syndrome (GBM thickening/splitting)",
+            "Thin basement membrane disease",
+            "Tubulointerstitial fibrosis (no glomerular lesion)",
+            "C3 glomerulopathy or MPGN"
+          ),
+          selected = character(0)
+        )
+      ),
+
+      # ── Family history & ancestry ──────────────────────────────────────────
+      form_section("\U1F9EC", "Family history & ancestry", open = TRUE,
+        selectInput("family_history", "Family history pattern",
+                    choices = c("None", "Autosomal dominant", "Autosomal recessive",
+                                "X-linked", "Unknown")),
+        selectInput("consanguinity", "Consanguinity",
+                    choices = c("Unknown", "Yes", "No")),
+        tags$div(style = "font-size:.82rem; font-weight:600; margin-top:8px; margin-bottom:4px;",
+                 "Ancestry (tick all that apply)"),
+        checkboxGroupInput("ancestry", label = NULL,
+          choices = c(
+            "Cypriot or eastern Mediterranean",
+            "African, African-American, Caribbean or Brazilian"
+          ),
+          selected = character(0)
+        )
+      ),
+
+      # ── Extra-renal features ───────────────────────────────────────────────
+      form_section("\U1F441", "Extra-renal features",
+        checkboxGroupInput("extra_renal", label = NULL,
+          choices  = c("Hearing loss", "Ocular abnormality", "Liver cysts",
+                       "Hypertension <35yrs", "Cognitive impairment",
+                       "Skeletal abnormality"),
+          selected = character(0),
+          inline   = FALSE
+        )
+      ),
+
+      # ── Clinical context ───────────────────────────────────────────────────
+      form_section("\U1F3E5", "Clinical context",
+        tags$p(style = "font-size:.8rem; color:#6c757d; margin-bottom:6px;",
+               "Tick all that apply to this patient’s current situation."),
+        checkboxGroupInput("clinical_context", label = NULL,
+          choices = c(
+            "Genetic diagnosis required for management",
+            "Renal transplant being considered",
+            "Complement inhibitory therapy being considered",
+            "Being assessed for living kidney donation",
+            "Counselled and consented for APOL1 testing"
+          ),
+          selected = character(0)
+        )
+      ),
+
+      # ── Clinical vignette (optional) ───────────────────────────────────────
+      form_section("\U1F4DD", "Clinical vignette (optional — HPO extraction)",
+        tags$p(style = "font-size:.8rem; color:#6c757d; margin-bottom:6px;",
+               "Paste a free-text summary to extract additional HPO terms for Bayesian scoring."),
         tags$textarea(
           id          = "vignette",
           class       = "form-control shiny-input-text-area",
-          placeholder = "e.g. 32-year-old man with microscopic haematuria, sensorineural hearing loss and family history of renal failure in maternal uncle...",
-          rows        = 5,
-          style       = "min-height:120px; font-size:.88rem;"
-        )
-      ),
-
-      tags$hr(style = "margin:10px 0;"),
-
-      fluidRow(
-        column(6,
-          numericInput("age", "Age at presentation (yrs)", value = NA, min = 0, max = 120)
+          placeholder = "e.g. 32-year-old man with microscopic haematuria, sensorineural hearing loss and family history of renal failure...",
+          rows        = 4,
+          style       = "font-size:.85rem;"
         ),
-        column(6,
-          selectInput("sex", "Sex", choices = c("Unknown", "Male", "Female"))
-        )
-      ),
-      fluidRow(
-        column(6,
-          numericInput("egfr", "eGFR (ml/min/1.73m²)", value = NA, min = 0, max = 200)
-        ),
-        column(6,
-          selectInput("proteinuria", "Proteinuria",
-                      choices = c("None", "Sub-nephrotic", "Nephrotic-range"))
-        )
+        actionButton("extract_hpo", "Extract HPO Terms",
+                     class = "btn btn-outline-primary btn-sm w-100 mt-2",
+                     icon  = icon("dna"))
       ),
 
-      selectInput("haematuria", "Haematuria",
-                  choices = c("None", "Microscopic", "Macroscopic")),
+      # ── HPO confirmation (appears after extraction) ────────────────────────
+      uiOutput("hpo_section"),
 
-      selectInput("family_history", "Family history pattern",
-                  choices = c("None", "Autosomal dominant", "Autosomal recessive",
-                              "X-linked", "Unknown")),
-
+      # ── Run Analysis (always visible) ─────────────────────────────────────
       tags$div(
-        class = "form-label fw-semibold mt-2",
-        "Extra-renal features"
-      ),
-      checkboxGroupInput("extra_renal", label = NULL,
-        choices  = c("Hearing loss", "Ocular abnormality", "Liver cysts",
-                     "Hypertension <35yrs", "Cognitive impairment",
-                     "Skeletal abnormality", "None"),
-        selected = "None",
-        inline   = FALSE
-      ),
-
-      selectInput("consanguinity", "Consanguinity",
-                  choices = c("Unknown", "Yes", "No")),
-
-      actionButton("extract_hpo", "Extract HPO Terms",
-                   class = "btn btn-primary w-100 mt-2",
-                   icon  = icon("dna")),
-
-      # ── Step 2: HPO term confirmation ──────────────────────────────────────
-      uiOutput("hpo_section")
+        style = "margin-top:10px;",
+        actionButton("run_analysis", "Run Analysis",
+                     class = "btn btn-success w-100",
+                     icon  = icon("magnifying-glass-chart"))
+      )
     ),
 
-    # ── Right output panel ───────────────────────────────────────────────────
+    # ── Right output panel ─────────────────────────────────────────────────────
     div(
       style = "overflow-y:auto; height:calc(100vh - 56px); padding:16px;",
 
       uiOutput("output_section"),
 
-      # Footer disclaimer — always visible
       tags$div(
         class = "disclaimer-footer mt-auto",
         tags$strong("Disclaimers: "),
@@ -177,7 +245,7 @@ ui <- page_fillable(
 server <- function(input, output, session) {
 
   rv <- reactiveValues(
-    hpo_terms      = list(),   # list of list(id, label, confidence)
+    hpo_terms      = list(),
     removed_ids    = character(0),
     analysis_done  = FALSE,
     eligibility    = NULL,
@@ -195,7 +263,6 @@ server <- function(input, output, session) {
     rv$loading_hpo <- TRUE
     rv$hpo_terms   <- list()
     rv$removed_ids <- character(0)
-    rv$analysis_done <- FALSE
 
     vignette <- input$vignette
     age      <- input$age
@@ -204,7 +271,7 @@ server <- function(input, output, session) {
     proto    <- input$proteinuria
     haem     <- input$haematuria
     fhist    <- input$family_history
-    xrenal   <- if (length(input$extra_renal) == 0 || "None" %in% input$extra_renal) "None" else input$extra_renal
+    xrenal   <- if (length(input$extra_renal) == 0) "None" else input$extra_renal
     consang  <- input$consanguinity
 
     tryCatch({
@@ -226,7 +293,6 @@ server <- function(input, output, session) {
   observeEvent(input$add_hpo_btn, {
     raw <- trimws(input$manual_hpo)
     if (nchar(raw) == 0) return()
-
     new_term <- list(id = paste0("MANUAL-", gsub("\\s+", "_", raw)),
                      label = raw, confidence = "high")
     rv$hpo_terms <- c(rv$hpo_terms, list(new_term))
@@ -240,20 +306,19 @@ server <- function(input, output, session) {
 
   # ── Run analysis ───────────────────────────────────────────────────────────
   observeEvent(input$run_analysis, {
-    rv$run_error <- NULL
+    rv$run_error     <- NULL
+    rv$analysis_done <- FALSE
 
-    terms <- confirmed_terms()
-    req(length(terms) >= 3)
+    confirmed_ids <- sapply(confirmed_terms(), `[[`, "id")
 
-    confirmed_ids <- sapply(terms, `[[`, "id")
-
-    age_val    <- suppressWarnings(as.numeric(input$age))
-    egfr_val   <- suppressWarnings(as.numeric(input$egfr))
-    xrenal_val <- if ("None" %in% input$extra_renal || length(input$extra_renal) == 0)
-                    character(0) else input$extra_renal
+    age_val      <- suppressWarnings(as.numeric(input$age))
+    egfr_val     <- suppressWarnings(as.numeric(input$egfr))
+    xrenal_val   <- if (length(input$extra_renal) == 0) character(0) else input$extra_renal
+    biopsy_val   <- if (length(input$biopsy_results) == 0) character(0) else input$biopsy_results
+    ancestry_val <- if (length(input$ancestry) == 0) character(0) else input$ancestry
+    context_val  <- if (length(input$clinical_context) == 0) character(0) else input$clinical_context
 
     tryCatch({
-      # Eligibility
       rv$eligibility <- run_eligibility_all_panels(
         panels            = renal_panels,
         strict_criteria   = panel_strict_criteria,
@@ -265,21 +330,23 @@ server <- function(input, output, session) {
         family_history    = input$family_history,
         extra_renal       = xrenal_val,
         egfr              = egfr_val,
-        consanguinity     = input$consanguinity
+        consanguinity     = input$consanguinity,
+        biopsy_results    = biopsy_val,
+        ancestry          = ancestry_val,
+        clinical_context  = context_val
       )
 
-      # Bayesian update
       rv$posterior_df <- run_bayesian_update(
-        confirmed_hpo_ids       = confirmed_ids,
-        age                     = age_val,
-        family_history          = input$family_history,
-        consanguinity           = input$consanguinity,
-        condition_priors        = condition_priors,
-        hpo_lr_positive         = hpo_lr_positive,
-        hpo_lr_negative         = hpo_lr_negative,
+        confirmed_hpo_ids        = confirmed_ids,
+        age                      = age_val,
+        family_history           = input$family_history,
+        consanguinity            = input$consanguinity,
+        condition_priors         = condition_priors,
+        hpo_lr_positive          = hpo_lr_positive,
+        hpo_lr_negative          = hpo_lr_negative,
         family_history_modifiers = family_history_modifiers,
         consanguinity_modifiers  = consanguinity_modifiers,
-        age_modifier_fn         = age_modifier
+        age_modifier_fn          = age_modifier
       )
 
       rv$analysis_done <- TRUE
@@ -292,7 +359,7 @@ server <- function(input, output, session) {
   output$hpo_section <- renderUI({
     if (rv$loading_hpo) {
       return(tags$div(
-        class = "mt-3 text-center text-primary",
+        class = "mt-2 text-center text-primary",
         tags$div(class = "spinner-border spinner-border-sm me-2"),
         "Extracting HPO terms…"
       ))
@@ -300,7 +367,8 @@ server <- function(input, output, session) {
 
     if (!is.null(rv$error_msg)) {
       return(tags$div(
-        class = "alert alert-danger mt-3",
+        class = "alert alert-danger mt-2",
+        style = "font-size:.82rem;",
         tags$strong("Error: "), rv$error_msg
       ))
     }
@@ -326,17 +394,14 @@ server <- function(input, output, session) {
       )
     })
 
-    n_active <- length(active)
-    can_run  <- n_active >= 3
-
     tagList(
-      tags$hr(style = "margin:12px 0;"),
+      tags$hr(style = "margin:8px 0;"),
       tags$div(class = "section-label",
-               paste0("Step 2 — Confirm HPO Terms (", n_active, " active)")),
+               paste0("HPO Terms (", length(active), " active)")),
       tags$div(
-        style = "background:#f8fafc; border:1px solid #d1dce8; border-radius:6px; padding:8px; margin-bottom:8px;",
-        if (n_active == 0) {
-          tags$span(style = "color:#8a99aa; font-style:italic; font-size:.85rem;",
+        style = "background:#f8fafc; border:1px solid #d1dce8; border-radius:6px; padding:6px; margin-bottom:6px;",
+        if (length(active) == 0) {
+          tags$span(style = "color:#8a99aa; font-style:italic; font-size:.83rem;",
                     "All terms removed. Add terms manually below.")
         } else {
           tagList(badge_list)
@@ -348,18 +413,7 @@ server <- function(input, output, session) {
                    class = "form-control form-control-sm",
                    placeholder = "Add HPO term name…"),
         actionButton("add_hpo_btn", "+", class = "btn btn-outline-primary btn-sm")
-      ),
-      if (!can_run) {
-        tags$div(
-          class = "text-muted mt-2",
-          style = "font-size:.8rem;",
-          paste0("⚠️ ", 3 - n_active, " more term(s) needed to run analysis.")
-        )
-      },
-      actionButton("run_analysis", "Run Analysis",
-                   class = paste("btn w-100 mt-2", if (can_run) "btn-success" else "btn-secondary"),
-                   disabled = if (can_run) NULL else "disabled",
-                   icon = icon("magnifying-glass-chart"))
+      )
     )
   })
 
@@ -373,7 +427,7 @@ server <- function(input, output, session) {
         tags$code(rv$run_error),
         tags$br(),
         tags$small(class = "text-muted",
-                   "Please copy this error and report it. Check the RStudio console for the full traceback.")
+                   "Check the RStudio console for the full traceback.")
       ))
     }
 
@@ -382,30 +436,20 @@ server <- function(input, output, session) {
         class = "output-placeholder",
         tags$div(style = "font-size:2.5rem; margin-bottom:12px;", "\U0001F9EC"),
         tags$div(style = "font-size:1rem; font-weight:600; color:#4a6fa5;",
-                 "Complete Step 1 → Extract HPO Terms → Run Analysis"),
+                 "Complete the clinical form and click Run Analysis"),
         tags$div(style = "font-size:.85rem; margin-top:6px;",
-                 "Results will appear here after running the analysis.")
+                 "Results will appear here. HPO term extraction is optional.")
       ))
     }
 
     tagList(
-      # ── Output A: Eligibility table ───────────────────────────────────────
       card(
-        card_header(
-          tags$span("\U0001F4CB NHS Genomic Test Directory — Eligibility Assessment")
-        ),
-        card_body(
-          style = "overflow-x:auto;",
-          uiOutput("eligibility_table")
-        )
+        card_header(tags$span("\U0001F4CB NHS Genomic Test Directory — Eligibility Assessment")),
+        card_body(style = "overflow-x:auto;", uiOutput("eligibility_table"))
       ),
-
-      # ── Output B: Bayesian chart ──────────────────────────────────────────
       card(
         class = "mt-3",
-        card_header(
-          tags$span("\U0001F4CA Bayesian Posterior Probability by Condition")
-        ),
+        card_header(tags$span("\U0001F4CA Bayesian Posterior Probability by Condition")),
         card_body(
           uiOutput("bayes_summary"),
           plotlyOutput("posterior_plot", height = "420px")
@@ -418,8 +462,13 @@ server <- function(input, output, session) {
   output$eligibility_table <- renderUI({
     req(rv$eligibility)
 
+    make_pills <- function(items, cls) {
+      if (length(items) == 0) return(NULL)
+      do.call(tagList, lapply(items, function(x) tags$span(class = cls, x)))
+    }
+
     rows <- lapply(rv$eligibility, function(res) {
-      badge_bg <- switch(res$eligibility,
+      badge_bg  <- switch(res$eligibility,
         "Likely eligible"   = "#198754",
         "Possibly eligible" = "#ffc107",
         "Unlikely eligible" = "#dc3545",
@@ -428,10 +477,9 @@ server <- function(input, output, session) {
       badge_col <- if (res$eligibility == "Possibly eligible") "#000" else "#fff"
       icon_str  <- eligibility_icon(res$eligibility)
 
-      # Strict layer pills
-      s_met   <- res$strict_met
-      s_not   <- res$strict_not
-      s_unk   <- res$strict_unknown
+      s_met <- res$strict_met
+      s_not <- res$strict_not
+      s_unk <- res$strict_unknown
 
       strict_badge_col <- switch(res$strict_result,
         "met"     = "#198754",
@@ -449,11 +497,6 @@ server <- function(input, output, session) {
           paste(strict_icon(res$strict_result), strict_label(res$strict_result))
         )
       )
-
-      make_pills <- function(items, cls) {
-        if (length(items) == 0) return(NULL)
-        do.call(tagList, lapply(items, function(x) tags$span(class = cls, x)))
-      }
 
       strict_detail <- tags$details(
         style = "margin-top:2px;",
@@ -476,9 +519,8 @@ server <- function(input, output, session) {
         )
       )
 
-      # HPO layer pills (only show if strict criteria not failed)
-      hpo_met_pills  <- make_pills(res$hpo_criteria_met, "criteria-pill")
-      hpo_not_pills  <- make_pills(res$hpo_criteria_not, "criteria-pill unmet")
+      hpo_met_pills <- make_pills(res$hpo_criteria_met, "criteria-pill")
+      hpo_not_pills <- make_pills(res$hpo_criteria_not, "criteria-pill unmet")
 
       met_pills <- tagList(strict_summary, strict_detail,
         if (!is.null(hpo_met_pills) && res$strict_result != "not_met") tagList(
@@ -496,15 +538,11 @@ server <- function(input, output, session) {
         tags$span(style = "color:#aaa; font-size:.8rem;", "—")
       }
 
-      # look up panelapp_url and gene list from the source panel
       panel_url   <- renal_panels[[res$code]]$panelapp_url
       panel_genes <- renal_panels[[res$code]]$genes
       n_genes     <- length(panel_genes)
       preview     <- paste(head(panel_genes, 8), collapse = ", ")
-      gene_label  <- if (n_genes > 8)
-        paste0(preview, " … +", n_genes - 8, " more")
-      else
-        preview
+      gene_label  <- if (n_genes > 8) paste0(preview, " … +", n_genes - 8, " more") else preview
 
       tags$tr(
         tags$td(
@@ -520,14 +558,10 @@ server <- function(input, output, session) {
           tags$div(res$name),
           tags$details(
             style = "margin-top:3px;",
-            tags$summary(
-              style = "font-size:.75rem; color:#6c757d; cursor:pointer;",
-              paste0(n_genes, " green genes")
-            ),
-            tags$div(
-              style = "font-size:.72rem; color:#444; margin-top:3px; line-height:1.6;",
-              gene_label
-            )
+            tags$summary(style = "font-size:.75rem; color:#6c757d; cursor:pointer;",
+                         paste0(n_genes, " green genes")),
+            tags$div(style = "font-size:.72rem; color:#444; margin-top:3px; line-height:1.6;",
+                     gene_label)
           )
         ),
         tags$td(
@@ -550,14 +584,15 @@ server <- function(input, output, session) {
         class = "table-light",
         tags$tr(
           tags$th("Code"), tags$th("Condition"),
-          tags$th("Eligibility"), tags$th("Criteria / Evidence"), tags$th("HPO criteria not met")
+          tags$th("Eligibility"), tags$th("Criteria / Evidence"),
+          tags$th("Unmet criteria")
         )
       ),
       tags$tbody(rows)
     )
   })
 
-  # ── Bayesian summary sentence ──────────────────────────────────────────────
+  # ── Bayesian summary ───────────────────────────────────────────────────────
   output$bayes_summary <- renderUI({
     req(rv$posterior_df)
     df  <- rv$posterior_df
@@ -567,20 +602,19 @@ server <- function(input, output, session) {
     ci_lo <- round(top$ci_lower * 100, 1)
     ci_hi <- round(top$ci_upper * 100, 1)
 
+    n_hpo <- length(confirmed_terms())
+    note  <- if (n_hpo == 0)
+      "No HPO terms — chart shows priors modified by age, family history and consanguinity only."
+    else
+      paste0("Based on ", n_hpo, " confirmed HPO term", if (n_hpo > 1) "s" else "", ".")
+
     tags$div(
       class = "summary-box",
-      tags$strong("Highest probability diagnosis: "),
-      lbl,
+      tags$strong("Highest probability diagnosis: "), lbl, tags$br(),
+      tags$span(style = "font-size:.9rem;",
+                sprintf("Posterior probability: %.1f%% (approx. 95%% CI: %.1f–%.1f%%)", pct, ci_lo, ci_hi)),
       tags$br(),
-      tags$span(
-        style = "font-size:.9rem;",
-        sprintf("Posterior probability: %.1f%% (approx. 95%% CI: %.1f–%.1f%%)", pct, ci_lo, ci_hi)
-      ),
-      tags$br(),
-      tags$small(
-        class = "text-muted",
-        paste0("Based on ", length(confirmed_terms()), " confirmed HPO terms.")
-      )
+      tags$small(class = "text-muted", note)
     )
   })
 

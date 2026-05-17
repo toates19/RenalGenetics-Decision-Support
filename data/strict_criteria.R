@@ -3,27 +3,27 @@
 # Layer 1 strict eligibility criteria
 # Source: NHS Rare & Inherited Disease Eligibility Criteria (Test_criteria.csv)
 #
-# Structure per panel:
-#   $description  — plain-English summary of the criteria
-#   $required     — named list; ALL must be met (AND logic)
-#   $any_of       — named list; AT LEAST ONE must be met (OR logic)
-#                   If $any_of is empty, only $required applies.
+# Parameters now supported in eval_criterion():
+#   hpo_terms | age | egfr | proteinuria | haematuria | family_history |
+#   extra_renal | biopsy_results | ancestry | clinical_context | free_text
 #
-# Each criterion:
-#   $description  — text shown to user
-#   $parameter    — "hpo_terms" | "age" | "egfr" | "proteinuria" | "haematuria"
-#                   | "family_history" | "extra_renal" | "free_text"
-#   $value        — matching value(s) or threshold string
-#   $assessable   — TRUE: can be checked from structured inputs
-#                   FALSE: requires clinical info not captured (shown as advisory)
+# biopsy_results choices (must match UI exactly):
+#   "FSGS or diffuse mesangial sclerosis"
+#   "Alport syndrome (GBM thickening/splitting)"
+#   "Thin basement membrane disease"
+#   "Tubulointerstitial fibrosis (no glomerular lesion)"
+#   "C3 glomerulopathy or MPGN"
 #
-# Scoring (see R/eligibility.R check_strict_layer()):
-#   "met"     — all assessable required pass + at least one assessable any_of passes
-#               (or all any_of are non-assessable)
-#   "partial" — all assessable required pass, but some any_of unassessable and
-#               none of the assessable any_of pass
-#   "not_met" — any assessable required fails, OR all assessable any_of fail
-#               with none unassessable
+# ancestry choices:
+#   "Cypriot or eastern Mediterranean"
+#   "African, African-American, Caribbean or Brazilian"
+#
+# clinical_context choices:
+#   "Genetic diagnosis required for management"
+#   "Renal transplant being considered"
+#   "Complement inhibitory therapy being considered"
+#   "Being assessed for living kidney donation"
+#   "Counselled and consented for APOL1 testing"
 # =============================================================================
 
 panel_strict_criteria <- list(
@@ -52,10 +52,10 @@ panel_strict_criteria <- list(
         assessable  = TRUE
       ),
       management_need = list(
-        description = "Not clinically characteristic of ADPKD and genetic diagnosis required for management, OR clinical ADPKD where genetic diagnosis will influence management",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        description = "Genetic diagnosis required for management (not characteristic of ADPKD, or ADPKD where diagnosis influences management)",
+        parameter   = "clinical_context",
+        value       = "Genetic diagnosis required for management",
+        assessable  = TRUE
       )
     )
   ),
@@ -78,13 +78,13 @@ panel_strict_criteria <- list(
         assessable  = TRUE
       ),
       biopsy_evidence = list(
-        description = "Biopsy showing Alport syndrome (GBM thickening/splitting) or thin basement membrane disease on electron microscopy",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        description = "Biopsy showing Alport syndrome (GBM thickening/splitting) or thin basement membrane disease",
+        parameter   = "biopsy_results",
+        value       = c("Alport syndrome (GBM thickening/splitting)", "Thin basement membrane disease"),
+        assessable  = TRUE
       ),
       alport_features = list(
-        description = "Clinical features of Alport syndrome: high-tone SNHL or characteristic ophthalmic signs (perimacular flecks or anterior lenticonus)",
+        description = "Clinical features of Alport syndrome: high-tone SNHL or characteristic ophthalmic signs",
         parameter   = "extra_renal",
         value       = c("Hearing loss", "Ocular abnormality"),
         assessable  = TRUE
@@ -94,19 +94,19 @@ panel_strict_criteria <- list(
 
   R195 = list(
     description = "Steroid-resistant nephrotic syndrome or proteinuric disease with FSGS/DMS on biopsy",
-    required = list(),  # no universal required — it's two OR pathways
+    required = list(),
     any_of = list(
       srns = list(
-        description = "Steroid-resistant nephrotic syndrome (nephrotic-range proteinuria failing ≥8 weeks steroids)",
+        description = "Steroid-resistant nephrotic syndrome (nephrotic-range proteinuria failing steroids)",
         parameter   = "proteinuria",
         value       = "Nephrotic-range",
         assessable  = TRUE
       ),
       fsgs_biopsy = list(
-        description = "Proteinuria with FSGS or diffuse mesangial sclerosis on biopsy, no identifiable cause, where transplant or immunosuppression is planned",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        description = "Biopsy showing FSGS or diffuse mesangial sclerosis, no identifiable cause, transplant or immunosuppression planned",
+        parameter   = "biopsy_results",
+        value       = c("FSGS or diffuse mesangial sclerosis"),
+        assessable  = TRUE
       )
     )
   ),
@@ -116,9 +116,9 @@ panel_strict_criteria <- list(
     required = list(
       cypriot_ancestry = list(
         description = "Patient is of Cypriot or eastern Mediterranean ancestry",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        parameter   = "ancestry",
+        value       = c("Cypriot or eastern Mediterranean"),
+        assessable  = TRUE
       )
     ),
     any_of = list(
@@ -129,16 +129,16 @@ panel_strict_criteria <- list(
         assessable  = TRUE
       ),
       renal_failure = list(
-        description = "Unexplained renal failure / CKD",
+        description = "Unexplained renal failure / CKD (eGFR < 60)",
         parameter   = "egfr",
         value       = "< 60",
         assessable  = TRUE
       ),
       c3_glomerulopathy = list(
-        description = "Biopsy-proven C3 glomerulopathy",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        description = "Biopsy-proven C3 glomerulopathy or MPGN",
+        parameter   = "biopsy_results",
+        value       = c("C3 glomerulopathy or MPGN"),
+        assessable  = TRUE
       )
     )
   ),
@@ -154,9 +154,9 @@ panel_strict_criteria <- list(
       ),
       mpgn_biopsy = list(
         description = "Biopsy-proven idiopathic MPGN or C3 glomerulopathy",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        parameter   = "biopsy_results",
+        value       = c("C3 glomerulopathy or MPGN"),
+        assessable  = TRUE
       )
     ),
     any_of = list(
@@ -168,15 +168,15 @@ panel_strict_criteria <- list(
       ),
       transplant_planned = list(
         description = "Renal transplant is being considered",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        parameter   = "clinical_context",
+        value       = "Renal transplant being considered",
+        assessable  = TRUE
       ),
       complement_therapy = list(
         description = "Patient is being considered for complement inhibitory therapies",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        parameter   = "clinical_context",
+        value       = "Complement inhibitory therapy being considered",
+        assessable  = TRUE
       )
     )
   ),
@@ -188,7 +188,7 @@ panel_strict_criteria <- list(
       hypokalaemic_alkalosis = list(
         description = "Hypokalaemic alkalosis with normal or low blood pressure (Bartter/Gitelman)",
         parameter   = "hpo_terms",
-        value       = c("HP:0002900", "HP:0001942"),  # hypokalaemia + metabolic alkalosis
+        value       = c("HP:0002900", "HP:0001942"),
         assessable  = TRUE
       ),
       hypokalaemic_htn = list(
@@ -200,7 +200,7 @@ panel_strict_criteria <- list(
       hyperkalaemic_acidosis = list(
         description = "Hyperkalaemic acidosis (pseudohypoaldosteronism type 1 or 2)",
         parameter   = "hpo_terms",
-        value       = c("HP:0002153"),  # hyperkalaemia
+        value       = c("HP:0002153"),
         assessable  = TRUE
       ),
       hypomagnesaemia = list(
@@ -259,9 +259,9 @@ panel_strict_criteria <- list(
       ),
       complement_therapy = list(
         description = "Being considered for complement inhibitory therapies (eculizumab/ravulizumab)",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        parameter   = "clinical_context",
+        value       = "Complement inhibitory therapy being considered",
+        assessable  = TRUE
       )
     ),
     any_of = list()
@@ -271,7 +271,7 @@ panel_strict_criteria <- list(
     description = "Tubulointerstitial kidney disease: biopsy-proven TIKD plus family history",
     required = list(
       renal_impairment = list(
-        description = "Renal impairment (eGFR <60 ml/min/1.73m²)",
+        description = "Renal impairment (eGFR < 60 ml/min/1.73m²)",
         parameter   = "egfr",
         value       = "< 60",
         assessable  = TRUE
@@ -283,10 +283,10 @@ panel_strict_criteria <- list(
         assessable  = TRUE
       ),
       tikd_biopsy = list(
-        description = "Biopsy showing tubulointerstitial fibrosis with no glomerular lesion and no identifiable cause (often with medullary cysts, hyperuricaemia or gout)",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        description = "Biopsy showing tubulointerstitial fibrosis with no glomerular lesion and no identifiable cause",
+        parameter   = "biopsy_results",
+        value       = c("Tubulointerstitial fibrosis (no glomerular lesion)"),
+        assessable  = TRUE
       )
     ),
     any_of = list()
@@ -309,7 +309,7 @@ panel_strict_criteria <- list(
         assessable  = TRUE
       ),
       renal_impairment = list(
-        description = "Renal impairment",
+        description = "Renal impairment (eGFR < 60)",
         parameter   = "egfr",
         value       = "< 60",
         assessable  = TRUE
@@ -358,7 +358,7 @@ panel_strict_criteria <- list(
         assessable  = TRUE
       ),
       severe_ckd = list(
-        description = "End-stage renal disease or eGFR <30 ml/min/1.73m²",
+        description = "End-stage renal disease or eGFR < 30 ml/min/1.73m²",
         parameter   = "egfr",
         value       = "< 30",
         assessable  = TRUE
@@ -378,21 +378,21 @@ panel_strict_criteria <- list(
     required = list(
       donor_assessment = list(
         description = "Individual is being assessed for living kidney donation",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        parameter   = "clinical_context",
+        value       = "Being assessed for living kidney donation",
+        assessable  = TRUE
       ),
       african_ancestry = list(
         description = "Both parents have (or likely have) African, African-American, Caribbean or Brazilian heritage",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        parameter   = "ancestry",
+        value       = c("African, African-American, Caribbean or Brazilian"),
+        assessable  = TRUE
       ),
       consent = list(
         description = "Individual has undergone counselling, understands implications, and has provided consent",
-        parameter   = "free_text",
-        value       = NULL,
-        assessable  = FALSE
+        parameter   = "clinical_context",
+        value       = "Counselled and consented for APOL1 testing",
+        assessable  = TRUE
       )
     ),
     any_of = list()

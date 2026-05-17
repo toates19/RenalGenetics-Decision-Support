@@ -8,22 +8,26 @@
 # -----------------------------------------------------------------------------
 check_strict_layer <- function(strict, confirmed_hpo_ids, age, egfr,
                                 proteinuria, haematuria, family_history,
-                                extra_renal) {
+                                extra_renal, biopsy_results, ancestry,
+                                clinical_context) {
 
   eval_criterion <- function(crit) {
-    if (!crit$assessable) return(NA)  # NA = cannot assess
+    if (!crit$assessable) return(NA)
     p <- crit$parameter
     v <- crit$value
 
     switch(p,
-      hpo_terms      = any(v %in% confirmed_hpo_ids),
-      age            = !is.na(age) && eval_age_criterion(age, v),
-      egfr           = !is.na(egfr) && eval_egfr_criterion(egfr, v),
-      proteinuria    = proteinuria %in% v,
-      haematuria     = haematuria %in% v,
-      family_history = family_history %in% v,
-      extra_renal    = any(v %in% extra_renal),
-      free_text      = NA,
+      hpo_terms        = any(v %in% confirmed_hpo_ids),
+      age              = !is.na(age) && eval_age_criterion(age, v),
+      egfr             = !is.na(egfr) && eval_egfr_criterion(egfr, v),
+      proteinuria      = proteinuria %in% v,
+      haematuria       = haematuria %in% v,
+      family_history   = family_history %in% v,
+      extra_renal      = any(v %in% extra_renal),
+      biopsy_results   = any(v %in% biopsy_results),
+      ancestry         = any(v %in% ancestry),
+      clinical_context = any(v %in% clinical_context),
+      free_text        = NA,
       NA
     )
   }
@@ -31,12 +35,10 @@ check_strict_layer <- function(strict, confirmed_hpo_ids, age, egfr,
   # Evaluate required criteria
   req_results  <- lapply(strict$required, eval_criterion)
   req_desc     <- lapply(strict$required, `[[`, "description")
-  req_assess   <- sapply(strict$required, `[[`, "assessable")
 
   # Evaluate any_of criteria
   any_results  <- lapply(strict$any_of, eval_criterion)
   any_desc     <- lapply(strict$any_of, `[[`, "description")
-  any_assess   <- sapply(strict$any_of, `[[`, "assessable")
 
   # Classify each (vapply guarantees logical vector even for empty lists)
   req_met      <- vapply(req_results, isTRUE,  logical(1))
@@ -53,19 +55,19 @@ check_strict_layer <- function(strict, confirmed_hpo_ids, age, egfr,
 
   required_ok <- if (has_required) !any(req_failed) else TRUE
   any_ok      <- if (has_any_of) {
-    if (any(any_met)) TRUE          # at least one assessable criterion met
-    else if (all(any_unknown)) NA   # all unassessable → can't determine
-    else FALSE                      # none met and some were assessable
+    if (any(any_met)) TRUE
+    else if (all(any_unknown)) NA
+    else FALSE
   } else TRUE
 
   strict_result <- if (!required_ok) {
     "not_met"
   } else if (is.na(any_ok)) {
-    "partial"   # required all pass, any_of all unassessable
+    "partial"
   } else if (!any_ok) {
     "not_met"
   } else if (any(req_unknown) || any(any_unknown)) {
-    "partial"   # some criteria couldn't be assessed
+    "partial"
   } else {
     "met"
   }
@@ -85,15 +87,15 @@ check_strict_layer <- function(strict, confirmed_hpo_ids, age, egfr,
   )
 
   list(
-    result          = strict_result,   # "met" | "partial" | "not_met"
-    criteria_met    = strict_met,
-    criteria_not    = strict_not,
+    result           = strict_result,
+    criteria_met     = strict_met,
+    criteria_not     = strict_not,
     criteria_unknown = strict_unknown
   )
 }
 
 # -----------------------------------------------------------------------------
-# Layer 2: HPO + structured parameter matching (unchanged logic)
+# Layer 2: HPO + structured parameter matching
 # -----------------------------------------------------------------------------
 score_hpo_layer <- function(panel, confirmed_hpo_ids, age, sex,
                              proteinuria, haematuria, family_history,
@@ -147,29 +149,27 @@ score_hpo_layer <- function(panel, confirmed_hpo_ids, age, sex,
 # -----------------------------------------------------------------------------
 score_panel_eligibility <- function(panel, strict, confirmed_hpo_ids, age, sex,
                                      proteinuria, haematuria, family_history,
-                                     extra_renal, egfr, consanguinity) {
+                                     extra_renal, egfr, consanguinity,
+                                     biopsy_results, ancestry, clinical_context) {
 
-  # Layer 1
   layer1 <- check_strict_layer(strict, confirmed_hpo_ids, age, egfr,
                                 proteinuria, haematuria, family_history,
-                                extra_renal)
+                                extra_renal, biopsy_results, ancestry,
+                                clinical_context)
 
-  # Layer 2 (always run so we can display it, but it only drives verdict if L1 passes)
   layer2 <- score_hpo_layer(panel, confirmed_hpo_ids, age, sex,
                              proteinuria, haematuria, family_history,
                              extra_renal, egfr, consanguinity)
 
-  # Final verdict
   eligibility <- if (layer1$result == "not_met") {
     "Unlikely eligible"
   } else {
-    # Strict criteria met (or partial) — HPO layer determines Likely vs Possibly
     if (layer2$n_met >= 2 || layer2$n_overlap >= 3) {
       "Likely eligible"
     } else if (layer2$n_met >= 1 || layer2$n_overlap >= 1) {
       "Possibly eligible"
     } else if (layer1$result == "partial") {
-      "Possibly eligible"   # strict partially met, no HPO conflict
+      "Possibly eligible"
     } else {
       "Possibly eligible"
     }
@@ -196,17 +196,16 @@ score_panel_eligibility <- function(panel, strict, confirmed_hpo_ids, age, sex,
 run_eligibility_all_panels <- function(panels, strict_criteria,
                                         confirmed_hpo_ids, age, sex,
                                         proteinuria, haematuria, family_history,
-                                        extra_renal, egfr, consanguinity) {
+                                        extra_renal, egfr, consanguinity,
+                                        biopsy_results, ancestry, clinical_context) {
   lapply(names(panels), function(code) {
     panel  <- panels[[code]]
     strict <- strict_criteria[[code]]
-    if (is.null(strict)) {
-      # No strict criteria defined — fall back to HPO-only scoring
-      strict <- list(required = list(), any_of = list())
-    }
+    if (is.null(strict)) strict <- list(required = list(), any_of = list())
     score_panel_eligibility(panel, strict, confirmed_hpo_ids, age, sex,
                             proteinuria, haematuria, family_history,
-                            extra_renal, egfr, consanguinity)
+                            extra_renal, egfr, consanguinity,
+                            biopsy_results, ancestry, clinical_context)
   })
 }
 
@@ -240,10 +239,10 @@ eligibility_icon <- function(label) {
 
 strict_icon <- function(result) {
   switch(result,
-    "met"     = "✅",       # ✅ green tick
-    "partial" = "⚠️", # ⚠️ warning
-    "not_met" = "❌",       # ❌ red cross
-    "❓"                    # ❓ question mark
+    "met"     = "✅",
+    "partial" = "⚠️",
+    "not_met" = "❌",
+    "❓"
   )
 }
 
