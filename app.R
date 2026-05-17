@@ -9,6 +9,7 @@ library(dplyr)
 # Load data and logic
 source("data/panels.R")
 source("data/bayes_params.R")
+source("data/strict_criteria.R")
 source("R/hpo_extract.R")
 source("R/eligibility.R")
 source("R/bayes.R")
@@ -48,6 +49,7 @@ app_theme <- bs_theme(
                      border-radius:4px; padding:1px 7px; font-size:.78rem;
                      color:#1b5e20; margin:1px; }
     .criteria-pill.unmet { background:#fce4ec; border-color:#e57373; color:#7f0000; }
+    .criteria-pill.unknown { background:#fff8e1; border-color:#ffc107; color:#5a4200; }
     .summary-box { background:#e8f1fa; border-left:4px solid #1a6fa8;
                    padding:10px 14px; border-radius:4px; margin-bottom:12px; }
     details > summary { list-style:none; }
@@ -249,16 +251,17 @@ server <- function(input, output, session) {
 
     # Eligibility
     rv$eligibility <- run_eligibility_all_panels(
-      panels          = renal_panels,
+      panels            = renal_panels,
+      strict_criteria   = panel_strict_criteria,
       confirmed_hpo_ids = confirmed_ids,
-      age             = age_val,
-      sex             = input$sex,
-      proteinuria     = input$proteinuria,
-      haematuria      = input$haematuria,
-      family_history  = input$family_history,
-      extra_renal     = xrenal_val,
-      egfr            = egfr_val,
-      consanguinity   = input$consanguinity
+      age               = age_val,
+      sex               = input$sex,
+      proteinuria       = input$proteinuria,
+      haematuria        = input$haematuria,
+      family_history    = input$family_history,
+      extra_renal       = xrenal_val,
+      egfr              = egfr_val,
+      consanguinity     = input$consanguinity
     )
 
     # Bayesian update
@@ -406,15 +409,73 @@ server <- function(input, output, session) {
       badge_col <- if (res$eligibility == "Possibly eligible") "#000" else "#fff"
       icon_str  <- eligibility_icon(res$eligibility)
 
-      met_pills <- if (length(res$criteria_met) > 0) {
-        lapply(res$criteria_met, function(c)
-          tags$span(class = "criteria-pill", c))
-      } else tags$span(style = "color:#aaa; font-size:.8rem;", "None")
+      # Strict layer pills
+      s_met   <- res$strict_met
+      s_not   <- res$strict_not
+      s_unk   <- res$strict_unknown
 
-      unmet_pills <- if (length(res$criteria_not) > 0) {
-        lapply(res$criteria_not, function(c)
-          tags$span(class = "criteria-pill unmet", c))
-      } else tags$span(style = "color:#aaa; font-size:.8rem;", "—")
+      strict_badge_col <- switch(res$strict_result,
+        "met"     = "#198754",
+        "partial" = "#fd7e14",
+        "not_met" = "#dc3545",
+        "#6c757d"
+      )
+
+      strict_summary <- tags$div(
+        style = "margin-bottom:4px;",
+        tags$span(
+          style = paste0("background:", strict_badge_col,
+                         "; color:#fff; border-radius:10px; padding:2px 8px;",
+                         " font-size:.72rem; font-weight:600; margin-right:4px;"),
+          paste(strict_icon(res$strict_result), strict_label(res$strict_result))
+        )
+      )
+
+      make_pills <- function(items, cls) {
+        if (length(items) == 0) return(NULL)
+        lapply(items, function(x) tags$span(class = cls, x))
+      }
+
+      strict_detail <- tags$details(
+        style = "margin-top:2px;",
+        tags$summary(style = "font-size:.74rem; color:#6c757d; cursor:pointer;",
+                     "Strict criteria detail"),
+        tags$div(
+          style = "margin-top:4px;",
+          if (length(s_met) > 0) tagList(
+            tags$div(style = "font-size:.72rem; font-weight:600; color:#198754; margin-bottom:2px;", "Met:"),
+            make_pills(s_met, "criteria-pill")
+          ),
+          if (length(s_not) > 0) tagList(
+            tags$div(style = "font-size:.72rem; font-weight:600; color:#dc3545; margin-top:4px; margin-bottom:2px;", "Not met:"),
+            make_pills(s_not, "criteria-pill unmet")
+          ),
+          if (length(s_unk) > 0) tagList(
+            tags$div(style = "font-size:.72rem; font-weight:600; color:#6c757d; margin-top:4px; margin-bottom:2px;", "Requires clinical assessment:"),
+            make_pills(s_unk, "criteria-pill unknown")
+          )
+        )
+      )
+
+      # HPO layer pills (only show if strict criteria not failed)
+      hpo_met_pills  <- make_pills(res$hpo_criteria_met, "criteria-pill")
+      hpo_not_pills  <- make_pills(res$hpo_criteria_not, "criteria-pill unmet")
+
+      met_pills <- tagList(strict_summary, strict_detail,
+        if (!is.null(hpo_met_pills) && res$strict_result != "not_met") tagList(
+          tags$div(style = "font-size:.72rem; font-weight:600; color:#1a6fa8; margin-top:6px; margin-bottom:2px;",
+                   "Supporting criteria:"),
+          hpo_met_pills
+        )
+      )
+
+      unmet_pills <- if (res$strict_result == "not_met") {
+        tags$span(style = "color:#aaa; font-size:.8rem;", "—")
+      } else if (!is.null(hpo_not_pills)) {
+        hpo_not_pills
+      } else {
+        tags$span(style = "color:#aaa; font-size:.8rem;", "—")
+      }
 
       # look up panelapp_url and gene list from the source panel
       panel_url   <- renal_panels[[res$code]]$panelapp_url
@@ -470,7 +531,7 @@ server <- function(input, output, session) {
         class = "table-light",
         tags$tr(
           tags$th("Code"), tags$th("Condition"),
-          tags$th("Eligibility"), tags$th("Key criteria met"), tags$th("Key criteria not met")
+          tags$th("Eligibility"), tags$th("Criteria / Evidence"), tags$th("HPO criteria not met")
         )
       ),
       tags$tbody(rows)
