@@ -1,6 +1,80 @@
 # R/bayes.R
 # Bayesian posterior probability calculation for renal genetic diagnoses
 
+# Map all structured form inputs to HPO IDs for Bayesian and eligibility scoring.
+derive_all_hpo_from_inputs <- function(
+  presentation        = character(0),
+  haematuria          = "None",
+  proteinuria         = "None",
+  extra_renal         = character(0),
+  egfr                = NA_real_,
+  tubulopathy_pattern = character(0),
+  ahus_features       = character(0),
+  amyloid_features    = character(0)
+) {
+  ids <- character(0)
+
+  # Cysts on imaging — implies cystic kidney disease HPO terms
+  if ("Cysts on imaging" %in% presentation)
+    ids <- c(ids, "HP:0000113", "HP:0005584")
+
+  # Haematuria
+  if (haematuria %in% c("Microscopic", "Macroscopic"))
+    ids <- c(ids, "HP:0000790")
+
+  # Proteinuria
+  if (proteinuria == "Sub-nephrotic")
+    ids <- c(ids, "HP:0000093")
+  else if (proteinuria == "Nephrotic-range")
+    ids <- c(ids, "HP:0000093", "HP:0000100")
+
+  # Extra-renal features
+  if ("Hearing loss"        %in% extra_renal) ids <- c(ids, "HP:0000407")
+  if ("Ocular abnormality"  %in% extra_renal) ids <- c(ids, "HP:0000504")
+  if ("Liver cysts"         %in% extra_renal) ids <- c(ids, "HP:0001407")
+  if ("Hypertension <35yrs" %in% extra_renal) ids <- c(ids, "HP:0000822")
+
+  # eGFR-derived CKD severity
+  if (!is.na(egfr) && is.numeric(egfr)) {
+    if (egfr < 60) ids <- c(ids, "HP:0012622")
+    if (egfr < 15) ids <- c(ids, "HP:0003774")
+  }
+
+  # Tubulopathy / stone patterns
+  if ("Hypokalaemia with alkalosis (Bartter / Gitelman)"        %in% tubulopathy_pattern)
+    ids <- c(ids, "HP:0002900", "HP:0001942")
+  if ("Hypokalaemia with acidosis (proximal RTA / Fanconi)"     %in% tubulopathy_pattern)
+    ids <- c(ids, "HP:0002900")
+  if ("Hyperkalaemia with acidosis (pseudohypoaldosteronism)"   %in% tubulopathy_pattern)
+    ids <- c(ids, "HP:0002153")
+  if ("Hypomagnesaemia"                                         %in% tubulopathy_pattern)
+    ids <- c(ids, "HP:0002917")
+  if ("Nephrogenic diabetes insipidus"                          %in% tubulopathy_pattern)
+    ids <- c(ids, "HP:0000863")
+  if ("Hypercalciuria"                                          %in% tubulopathy_pattern)
+    ids <- c(ids, "HP:0002150")
+  if ("Nephrocalcinosis"                                        %in% tubulopathy_pattern)
+    ids <- c(ids, "HP:0000121")
+  if ("Nephrolithiasis / recurrent kidney stones"               %in% tubulopathy_pattern)
+    ids <- c(ids, "HP:0000787")
+
+  # aHUS / thrombotic microangiopathy features
+  if ("AKI / acute renal failure"                               %in% ahus_features)
+    ids <- c(ids, "HP:0001919")
+  if ("Thrombocytopenia"                                        %in% ahus_features)
+    ids <- c(ids, "HP:0001873")
+  if ("Microangiopathic haemolytic anaemia (MAHA, Coombs negative)" %in% ahus_features)
+    ids <- c(ids, "HP:0001903", "HP:0001878", "HP:0005575")
+
+  # Hereditary amyloidosis features
+  if ("Restrictive cardiomyopathy"                              %in% amyloid_features)
+    ids <- c(ids, "HP:0001638")
+  if ("Peripheral or autonomic neuropathy"                      %in% amyloid_features)
+    ids <- c(ids, "HP:0001271")
+
+  unique(ids)
+}
+
 run_bayesian_update <- function(confirmed_hpo_ids, age, family_history,
                                  consanguinity, condition_priors,
                                  hpo_lr_positive, hpo_lr_negative,
@@ -29,7 +103,7 @@ run_bayesian_update <- function(confirmed_hpo_ids, age, family_history,
   }
 
   # Apply age modifier
-  age_val <- suppressWarnings(as.numeric(age))
+  age_val  <- suppressWarnings(as.numeric(age))
   age_mods <- age_modifier_fn(age_val)
   for (cond in conditions) {
     posterior[cond] <- posterior[cond] * age_mods[cond]
@@ -106,7 +180,7 @@ build_posterior_plot <- function(posterior_df, condition_labels, condition_colou
       thickness = 1.5,
       width     = 4
     ),
-    text        = ~pct_label,
+    text         = ~pct_label,
     textposition = "outside",
     hovertemplate = paste0(
       "<b>%{y}</b><br>",
@@ -122,7 +196,7 @@ build_posterior_plot <- function(posterior_df, condition_labels, condition_colou
       ),
       yaxis  = list(title = ""),
       margin = list(l = 10, r = 60, t = 10, b = 40),
-      showlegend = FALSE,
+      showlegend    = FALSE,
       paper_bgcolor = "rgba(0,0,0,0)",
       plot_bgcolor  = "rgba(0,0,0,0)"
     )
