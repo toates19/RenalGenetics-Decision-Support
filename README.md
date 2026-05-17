@@ -57,19 +57,35 @@ Genetics_app/
 
 ## How to use the app
 
-The sidebar is organised into seven collapsible sections. Fill in as many as are relevant — Run Analysis is always available and does not require HPO term extraction.
+The sidebar is organised into three fixed sections plus dynamic branch sections that appear based on the patient's presentation.
 
-| Section | Key inputs |
-|---------|-----------|
-| Demographics | Age, sex |
-| Renal presentation | eGFR, proteinuria level, haematuria |
-| Investigations | Biopsy findings (FSGS/DMS, Alport, thin BM, TIKD fibrosis, C3G/MPGN) |
-| Family history & ancestry | Inheritance pattern, consanguinity, Cypriot/Mediterranean or African/Caribbean/Brazilian ancestry |
-| Extra-renal features | Hearing loss, ocular abnormality, liver cysts, early hypertension, etc. |
-| Clinical context | Transplant consideration, complement therapy, management indication, kidney donor assessment, APOL1 consent |
-| Clinical vignette *(optional)* | Free-text summary — paste to extract HPO terms for Bayesian scoring |
+### 1 — Patient details (always visible)
 
-HPO term extraction uses the Anthropic API. Review extracted terms, remove irrelevant ones, and add missing ones manually before running analysis. If no vignette is provided the Bayesian chart still runs using age, family history and consanguinity modifiers.
+Age, sex, eGFR, family history pattern, consanguinity, and early-onset hypertension. These fields feed every panel and every Bayesian modifier, so they are always shown.
+
+### 2 — Primary presentation picker
+
+A multi-select checklist. Tick **all** that apply to the patient — the app then renders only the relevant branch sections below. Selecting multiple presentations shows the union of their questions, so a patient with both haematuria and heavy proteinuria gets both branches.
+
+| Presentation | Panels triggered | Branch-specific inputs |
+|---|---|---|
+| Cysts on imaging | R193 | Liver cysts |
+| Haematuria | R194, R196 | Haematuria type, biopsy (Alport / TBMD), hearing loss, ocular signs, Cypriot ancestry |
+| Proteinuria / nephrotic syndrome | R195, R197 | Proteinuria level, biopsy (FSGS, C3G/MPGN) |
+| Tubulopathy or kidney stones | R198, R256 | Electrolyte / tubular pattern (8 options) |
+| Unexplained renal impairment / early ESKD | R202, R257 | Biopsy (TIKD) |
+| Systemic features (aHUS or amyloidosis) | R201, R204 | TMA triad (AKI, thrombocytopenia, MAHA), cardiomyopathy, neuropathy |
+| Kidney donor assessment (APOL1) | R446 | African / Caribbean / Brazilian ancestry |
+
+### 3 — Clinical context (always visible, collapsible)
+
+Management indication, transplant, complement therapy, donor assessment, APOL1 consent.
+
+### 4 — Clinical vignette *(optional)*
+
+Paste a free-text summary to extract HPO terms via the Anthropic API. Extracted terms can be reviewed, removed, or supplemented manually. The vignette is entirely optional — all eligibility criteria and the Bayesian model are fully populated from the structured inputs alone.
+
+Run Analysis is always available and requires no minimum input.
 
 ---
 
@@ -79,7 +95,7 @@ Eligibility is assessed in two layers:
 
 **Layer 1 — Strict NHS criteria** (`data/strict_criteria.R`)
 
-Each panel has `required` criteria (ALL must be met) and `any_of` criteria (at least ONE must be met), derived directly from the NHS Rare & Inherited Disease Eligibility Criteria. Nearly all criteria are now assessable from the structured form inputs, including biopsy findings, ancestry, and clinical context. Any remaining non-assessable criteria (e.g. "no identifiable cause" for R257, expert-centre tubulopathy for R198) are shown as amber advisory items.
+Each panel has `required` criteria (ALL must be met) and `any_of` criteria (at least ONE must be met), derived directly from the NHS Rare & Inherited Disease Eligibility Criteria. All criteria are assessable from structured inputs. Any non-assessable criteria (e.g. "no identifiable cause" for R257, expert-centre tubulopathy for R198) are shown as amber advisory items.
 
 Layer 1 result: `met` / `partial` / `not_met`.
 
@@ -92,6 +108,40 @@ Scores how many of the panel's `major_criteria` are satisfied by confirmed HPO t
 - Layer 1 passed + (≥2 major criteria met OR ≥3 HPO overlaps) → **Likely eligible**
 - Layer 1 passed + (≥1 major criterion met OR ≥1 HPO overlap) → **Possibly eligible**
 - Layer 1 partial/met, no HPO support → **Possibly eligible**
+
+---
+
+## How HPO terms are derived
+
+`R/bayes.R` contains `derive_all_hpo_from_inputs()`, which maps every structured input to HPO IDs automatically. These auto-derived IDs are merged with any vignette-extracted HPO terms and passed to **both** the eligibility scorer and the Bayesian model. The mappings cover:
+
+| Input | HPO IDs derived |
+|---|---|
+| Cysts on imaging (presentation) | HP:0000113, HP:0005584 |
+| Microscopic / macroscopic haematuria | HP:0000790 |
+| Sub-nephrotic proteinuria | HP:0000093 |
+| Nephrotic-range proteinuria | HP:0000093, HP:0000100 |
+| eGFR < 60 | HP:0012622 |
+| eGFR < 15 | HP:0003774 |
+| Hearing loss | HP:0000407 |
+| Ocular abnormality | HP:0000504 |
+| Liver cysts | HP:0001407 |
+| Hypertension <35 yrs | HP:0000822 |
+| Hypokalaemia with alkalosis | HP:0002900, HP:0001942 |
+| Hypokalaemia with acidosis (RTA/Fanconi) | HP:0002900 |
+| Hyperkalaemia with acidosis | HP:0002153 |
+| Hypomagnesaemia | HP:0002917 |
+| Nephrogenic diabetes insipidus | HP:0000863 |
+| Hypercalciuria | HP:0002150 |
+| Nephrocalcinosis | HP:0000121 |
+| Nephrolithiasis | HP:0000787 |
+| AKI / acute renal failure | HP:0001919 |
+| Thrombocytopenia | HP:0001873 |
+| MAHA (Coombs negative) | HP:0001903, HP:0001878, HP:0005575 |
+| Restrictive cardiomyopathy | HP:0001638 |
+| Peripheral / autonomic neuropathy | HP:0001271 |
+
+This means R198 (tubulopathy), R201 (aHUS), and R204 (amyloidosis) strict criteria are fully assessable from the structured form without requiring HPO extraction.
 
 ---
 
@@ -143,7 +193,8 @@ Open `data/panels.R`. Each panel is an entry in the `renal_panels` named list:
 - **Update gene lists:** Replace the `genes` vector. Source TSV files from PanelApp; filter to `GEL_Status == 3` (green).
 - **Update strict criteria:** Edit `data/strict_criteria.R`. Each criterion needs `description`, `parameter`, `value`, and `assessable` fields. Supported parameters: `"hpo_terms"`, `"age"`, `"egfr"`, `"proteinuria"`, `"haematuria"`, `"family_history"`, `"extra_renal"`, `"biopsy_results"`, `"ancestry"`, `"clinical_context"`, `"free_text"`.
 - **Modify HPO-level criteria:** Edit the `major_criteria` list in `data/panels.R`. Uses the same parameter names (except `biopsy_results`, `ancestry`, `clinical_context` which are Layer 1 only).
-- **Add a new biopsy finding, ancestry, or clinical context option:** Add the choice string to both the `checkboxGroupInput` in `app.R` and the `value` field of the relevant criterion in `data/strict_criteria.R`. The strings must match exactly.
+- **Add a new biopsy finding, ancestry, or clinical context option:** Add the choice string to the relevant `checkboxGroupInput` in `app.R` (inside `output$branch_sections`) and to the `value` field of the criterion in `data/strict_criteria.R`. Strings must match exactly.
+- **Add a new branch-specific HPO mapping:** Add the input choice to the `checkboxGroupInput` in `app.R` and the corresponding HPO mapping to `derive_all_hpo_from_inputs()` in `R/bayes.R`.
 
 ---
 
@@ -162,8 +213,7 @@ Open `data/bayes_params.R`:
 
 - **Not validated for clinical use.** Posterior probabilities are decision-support estimates derived from approximated likelihood ratios.
 - Panel criteria are sourced from **NHS Rare & Inherited Disease Eligibility Criteria v9** and PanelApp Genomics England. Always check [PanelApp](https://panelapp.genomicsengland.co.uk) for current gene lists and criteria.
-- HPO extraction uses the Anthropic API (`claude-sonnet-4-5`) and requires `ANTHROPIC_API_KEY` to be set. It is optional — the eligibility table is fully functional without it.
-- All strict criteria for biopsy findings, ancestry, and clinical context are now captured via the structured form; very few criteria remain non-assessable.
+- HPO extraction uses the Anthropic API (`claude-sonnet-4-5`) and requires `ANTHROPIC_API_KEY` to be set. It is optional — all eligibility criteria and the Bayesian model are fully functional without it.
 - The Bayesian model assumes conditional independence of HPO features given the diagnosis, which is a simplification.
 - Always refer patients to a clinical genetics service for formal assessment and testing.
 
