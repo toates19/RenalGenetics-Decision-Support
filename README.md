@@ -87,7 +87,7 @@ Open `data/bayes_params.R`:
 ## Clinical caveats
 
 - **Not validated for clinical use.** Posterior probabilities are decision-support estimates derived from approximated likelihood ratios.
-- GT Directory panel criteria are based on **v7, April 2025** and may change. Check [NHS England GT Directory](https://www.england.nhs.uk/publication/national-genomic-test-directories/) for current criteria.
+- Panel criteria are sourced from **NHS Rare & Inherited Disease Eligibility Criteria v9** and PanelApp Genomics England. Check [PanelApp](https://panelapp.genomicsengland.co.uk) for current gene lists and criteria.
 - HPO extraction depends on the Anthropic API. Review extracted terms before running analysis — remove irrelevant terms and add missing ones.
 - The Bayesian model assumes conditional independence of HPO features given the diagnosis, which is a simplification.
 - Always refer patients to a clinical genetics service for formal assessment and testing.

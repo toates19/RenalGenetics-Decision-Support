@@ -50,6 +50,9 @@ app_theme <- bs_theme(
     .criteria-pill.unmet { background:#fce4ec; border-color:#e57373; color:#7f0000; }
     .summary-box { background:#e8f1fa; border-left:4px solid #1a6fa8;
                    padding:10px 14px; border-radius:4px; margin-bottom:12px; }
+    details > summary { list-style:none; }
+    details > summary::-webkit-details-marker { display:none; }
+    details[open] > summary { color:#1a6fa8; }
   ")
 
 # ── UI ────────────────────────────────────────────────────────────────────────
@@ -112,7 +115,7 @@ ui <- page_fillable(
         ),
         column(6,
           selectInput("proteinuria", "Proteinuria",
-                      choices = c("None", "Microalbuminuria", "Nephrotic-range"))
+                      choices = c("None", "Sub-nephrotic", "Nephrotic-range"))
         )
       ),
 
@@ -159,7 +162,7 @@ ui <- page_fillable(
         tags$ul(
           style = "margin:4px 0 0 0; padding-left:18px;",
           tags$li("This tool is for decision support only and does not replace clinical judgement or formal genetics referral."),
-          tags$li("GT Directory criteria based on version v7, April 2025."),
+          tags$li("Panel criteria based on NHS Rare & Inherited Disease Eligibility Criteria v9 and PanelApp Genomics England."),
           tags$li("Likelihood ratios are approximations from published literature; posterior probabilities are estimates only."),
           tags$li("Developed for educational and clinical aid purposes. Not validated for clinical use.")
         )
@@ -383,7 +386,7 @@ server <- function(input, output, session) {
         ),
         card_body(
           uiOutput("bayes_summary"),
-          plotlyOutput("posterior_plot", height = "320px")
+          plotlyOutput("posterior_plot", height = "420px")
         )
       )
     )
@@ -413,9 +416,40 @@ server <- function(input, output, session) {
           tags$span(class = "criteria-pill unmet", c))
       } else tags$span(style = "color:#aaa; font-size:.8rem;", "—")
 
+      # look up panelapp_url and gene list from the source panel
+      panel_url   <- renal_panels[[res$code]]$panelapp_url
+      panel_genes <- renal_panels[[res$code]]$genes
+      n_genes     <- length(panel_genes)
+      preview     <- paste(head(panel_genes, 8), collapse = ", ")
+      gene_label  <- if (n_genes > 8)
+        paste0(preview, " … +", n_genes - 8, " more")
+      else
+        preview
+
       tags$tr(
-        tags$td(style = "white-space:nowrap; font-weight:600; color:#1a6fa8;", res$code),
-        tags$td(style = "font-size:.85rem;", res$name),
+        tags$td(
+          style = "white-space:nowrap; font-weight:600;",
+          if (!is.null(panel_url) && nchar(panel_url) > 0)
+            tags$a(res$code, href = panel_url, target = "_blank",
+                   style = "color:#1a6fa8; text-decoration:none;")
+          else
+            tags$span(res$code, style = "color:#1a6fa8;")
+        ),
+        tags$td(
+          style = "font-size:.85rem;",
+          tags$div(res$name),
+          tags$details(
+            style = "margin-top:3px;",
+            tags$summary(
+              style = "font-size:.75rem; color:#6c757d; cursor:pointer;",
+              paste0(n_genes, " green genes")
+            ),
+            tags$div(
+              style = "font-size:.72rem; color:#444; margin-top:3px; line-height:1.6;",
+              gene_label
+            )
+          )
+        ),
         tags$td(
           style = "white-space:nowrap;",
           tags$span(

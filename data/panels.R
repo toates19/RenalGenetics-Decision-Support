@@ -22,10 +22,20 @@ renal_panels <- list(
   R193 = list(
     code        = "R193",
     name        = "Cystic renal disease",
-    genes       = c("PKD1", "PKD2", "PKHD1", "HNF1B", "GANAB", "PRKCSH", "DNAJB11",
-                    "FLCN", "VHL", "TSC1", "TSC2", "MUC1", "UMOD", "REN",
-                    "BBS1", "BBS2", "BBS4", "BBS5", "BBS7", "BBS9", "BBS10", "BBS12",
-                    "CEP290", "NPHP1", "INVS", "NPHP3", "NPHP4", "IQCB1", "SDCCAG8"),
+    genes       = c("AHI1", "ALG5", "ALG8", "ALG9", "ALMS1", "ANKS6", "ARL13B", "ARL6",
+                    "B9D2", "BBS1", "BBS10", "BBS12", "BBS2", "BBS4", "BBS5", "BBS7",
+                    "BBS9", "C5orf42", "CC2D2A", "CENPF", "CEP104", "CEP164", "CEP290",
+                    "CEP41", "CEP83", "CFAP47", "CLCN5", "COL4A1", "CRB2", "CSPP1",
+                    "CYP24A1", "DDX59", "DHCR7", "DLG5", "DNAJB11", "DYNC2H1", "DZIP1L",
+                    "FLCN", "GANAB", "GLA", "GLIS2", "HNF1B", "HYLS1", "ICK",
+                    "IFT122", "IFT140", "IFT172", "IFT27", "IFT43", "INPP5E", "INVS",
+                    "IQCB1", "KIAA0586", "KIAA0753", "KIF7", "LZTFL1", "MAPKBP1",
+                    "MKKS", "MKS1", "NEK8", "NPHP1", "NPHP3", "NPHP4", "OFD1",
+                    "PAX2", "PKD1", "PKD2", "PKHD1", "PMM2", "PRKCSH", "PSKH1",
+                    "RPGRIP1L", "SDCCAG8", "SEC63", "TCTN1", "TCTN2", "TCTN3",
+                    "TMEM107", "TMEM138", "TMEM216", "TMEM231", "TMEM237", "TMEM67",
+                    "TRAF3IP1", "TSC1", "TSC2", "TTC21B", "TTC8", "TULP3", "TXNDC15",
+                    "UMOD", "VHL", "WDPCP", "WDR19", "WDR35", "WDR60", "XPNPEP3"),
     inheritance = c("Autosomal dominant", "Autosomal recessive"),
     major_criteria = list(
       bilateral_cysts = list(
@@ -72,7 +82,7 @@ renal_panels <- list(
   R194 = list(
     code        = "R194",
     name        = "Haematuria",
-    genes       = c("COL4A1", "COL4A3", "COL4A4", "COL4A5", "MYH9"),
+    genes       = c("COL4A1", "COL4A3", "COL4A4", "COL4A5", "MYH9"),  # green only
     inheritance = c("X-linked", "Autosomal recessive", "Autosomal dominant"),
     major_criteria = list(
       persistent_haematuria = list(
@@ -118,12 +128,15 @@ renal_panels <- list(
   R195 = list(
     code        = "R195",
     name        = "Proteinuric renal disease",
-    genes       = c("NPHS1", "NPHS2", "WT1", "LAMB2", "PLCE1", "INF2", "TRPC6",
-                    "COQ2", "COQ6", "COQ8B", "CD2AP", "ACTN4", "MYH9", "LMX1B",
-                    "NUP93", "NUP107", "NUP85", "NUP133", "OSGEP", "SMARCAL1",
-                    "DGKE", "GLA", "SCARB2", "CUBN", "AMN", "LCAT", "APOE",
-                    "PAX2", "COL4A3", "COL4A4", "COL4A5", "CRB2", "OCRL",
-                    "SGPL1", "ARHGDIA", "PODXL", "MAGI2", "ITGA3", "LAMB2"),
+    genes       = c("ACTN4", "AMN", "APOE", "ARHGDIA", "CD151", "CD2AP", "CLCN5",
+                    "COL4A3", "COL4A4", "COL4A5", "COQ2", "COQ6", "COQ8B", "CRB2",
+                    "CUBN", "DAAM2", "DGKE", "DLC1", "FAT1", "FN1", "GLA", "GON7",
+                    "INF2", "ITGA3", "ITSN1", "LAGE3", "LAMB2", "LCAT", "LMX1B",
+                    "MAGI2", "MYH9", "MYO1E", "NOS1AP", "NPHS1", "NPHS2", "NUP107",
+                    "NUP133", "NUP85", "NUP93", "OCRL", "PAX2", "PDSS2", "PLCE1",
+                    "PODXL", "PRDM15", "SCARB2", "SMARCAL1", "TBC1D8B", "TNS2",
+                    "TP53RK", "TPRKB", "TRIM8", "TRPC6", "VIPAS39", "WDR73", "WT1",
+                    "YRDC"),
     inheritance = c("Autosomal recessive", "Autosomal dominant", "X-linked"),
     major_criteria = list(
       proteinuria = list(
@@ -214,7 +227,7 @@ renal_panels <- list(
   R197 = list(
     code        = "R197",
     name        = "Membranoproliferative glomerulonephritis (MPGN) including C3 glomerulopathy",
-    genes       = c("CFH", "CFI", "CFB", "C3", "CFHR1", "CFHR2", "CFHR5", "DGKE"),
+    genes       = c("C3", "CFB", "CFH", "CFHR1", "CFHR2", "CFHR5", "CFI", "DGKE"),
     inheritance = c("Autosomal dominant", "Autosomal recessive"),
     major_criteria = list(
       mpgn_biopsy = list(
@@ -259,12 +272,14 @@ renal_panels <- list(
   R198 = list(
     code        = "R198",
     name        = "Renal tubulopathies",
-    genes       = c("SLC12A1", "KCNJ1", "CLCNKB", "BSND", "SLC12A3", "CLDN16", "CLDN19",
-                    "ATP6V1B1", "ATP6V0A4", "SLC4A1", "CA2", "CASR", "GNA11",
-                    "HNF1B", "HNF4A", "SLC2A2", "REN", "KCNJ10", "KCNJ16",
-                    "TRPM6", "CNNM2", "SCNN1A", "SCNN1B", "SCNN1G", "NR3C2",
-                    "CUL3", "KLHL3", "WNK4", "SLC34A1", "SLC34A3", "CYP24A1",
-                    "AVPR2", "AQP2", "OCRL", "CTNS", "RRAGD", "MAGED2"),
+    genes       = c("AP2S1", "AQP2", "ATP1A1", "ATP6V0A4", "ATP6V1B1", "AVPR2",
+                    "BSND", "CA2", "CASR", "CLCN5", "CLCNKB", "CLDN10", "CLDN16",
+                    "CLDN19", "CNNM2", "CTNS", "CUL3", "CYP24A1", "GATM", "GNA11",
+                    "HNF1B", "HNF4A", "KCNJ1", "KCNJ10", "KCNJ16", "KLHL3",
+                    "MAGED2", "NR3C2", "OCRL", "REN", "RMND1", "RRAGD", "SARS2",
+                    "SCNN1A", "SCNN1B", "SCNN1G", "SEC61A1", "SLC12A1", "SLC12A3",
+                    "SLC22A12", "SLC2A2", "SLC2A9", "SLC4A1", "SLC4A4", "SLC5A2",
+                    "TRPM6", "UMOD", "VIPAS39", "VPS33B", "WDR72", "WNK4"),
     inheritance = c("Autosomal recessive", "Autosomal dominant", "X-linked"),
     major_criteria = list(
       electrolyte_abnormality = list(
@@ -308,64 +323,10 @@ renal_panels <- list(
     panelapp_url = "https://panelapp.genomicsengland.co.uk/panels/292/"
   ),
 
-  R199 = list(
-    code        = "R199",
-    name        = "Steroid-resistant nephrotic syndrome (SRNS) / focal segmental glomerulosclerosis (FSGS)",
-    genes       = c("NPHS1", "NPHS2", "WT1", "LAMB2", "PLCE1", "INF2", "TRPC6",
-                    "COQ2", "COQ6", "COQ8B", "CD2AP", "ACTN4", "MYH9", "LMX1B",
-                    "NUP93", "NUP107", "NUP85", "NUP133", "OSGEP", "SMARCAL1",
-                    "DGKE", "CRB2", "ARHGDIA", "ADCK4"),
-    inheritance = c("Autosomal recessive", "Autosomal dominant"),
-    major_criteria = list(
-      nephrotic_proteinuria = list(
-        description = "Nephrotic-range proteinuria (uPCR >300 mg/mmol or urine protein >3.5 g/24h)",
-        parameter   = "proteinuria",
-        value       = "Nephrotic-range"
-      ),
-      steroid_resistance = list(
-        description = "Failure to achieve complete remission after ≥8 weeks of adequate corticosteroid therapy",
-        parameter   = "free_text",
-        value       = NULL
-      ),
-      biopsy_fsgs = list(
-        description = "Biopsy showing FSGS, minimal change disease, or diffuse mesangial sclerosis",
-        parameter   = "hpo_terms",
-        value       = c("HP:0000100", "HP:0012622")
-      )
-    ),
-    supportive_criteria = list(
-      age_onset = list(
-        description = "Age at onset <25 years (congenital or infantile onset especially high yield)",
-        parameter   = "age",
-        value       = "< 25"
-      ),
-      family_history = list(
-        description = "Family history of nephrotic syndrome or ESKD",
-        parameter   = "family_history",
-        value       = c("Autosomal dominant", "Autosomal recessive")
-      ),
-      consanguinity = list(
-        description = "Consanguineous parents",
-        parameter   = "consanguinity",
-        value       = "Yes"
-      )
-    ),
-    hpo_relevant = c(
-      "HP:0000100",  # Nephrotic syndrome
-      "HP:0000093",  # Proteinuria
-      "HP:0000969",  # Oedema
-      "HP:0003774",  # End-stage renal disease
-      "HP:0012622",  # Chronic kidney disease
-      "HP:0001944"   # Dehydration
-    ),
-    notes       = "Congenital NS (<3 months) is almost always genetic — NPHS1 or LAMB2 most likely. NPHS2 (podocin) is the most common AR cause in older children; p.R229Q is a hypomorphic allele. WT1 mutations cause Denys-Drash (ambiguous genitalia, Wilms tumour risk) and Frasier syndrome (gonadoblastoma risk in 46XY). COQ gene mutations cause NS with mitochondrial features — trial CoQ10. NUP mutations characteristically resistant to all immunosuppression.",
-    panelapp_url = "https://panelapp.genomicsengland.co.uk/panels/1077/"
-  ),
-
   R201 = list(
     code        = "R201",
     name        = "Atypical haemolytic uraemic syndrome (aHUS)",
-    genes       = c("CFH", "CFI", "CFB", "C3", "CD46", "CFHR1", "CFHR3", "DGKE", "MMACHC"),
+    genes       = c("C3", "CD46", "CFB", "CFH", "CFI", "DGKE"),
     inheritance = c("Autosomal dominant", "Autosomal recessive"),
     major_criteria = list(
       microangiopathic_haemolysis = list(
@@ -421,9 +382,9 @@ renal_panels <- list(
   R202 = list(
     code        = "R202",
     name        = "Tubulointerstitial kidney disease (TIKD)",
-    genes       = c("UMOD", "MUC1", "REN", "HNF1B", "NPHP1", "NPHP3", "NPHP4",
-                    "ANKS6", "CEP164", "CEP83", "DNAJB11", "GATM", "INVS",
-                    "MAPKBP1", "SEC61A1", "TMEM67", "TTC21B", "WDR19", "XPNPEP3"),
+    genes       = c("ANKS6", "CEP164", "CEP83", "DNAJB11", "GATM", "HNF1B", "INVS",
+                    "MAPKBP1", "MT-TF", "MUC1", "NPHP1", "NPHP3", "NPHP4", "REN",
+                    "SEC61A1", "TMEM67", "TTC21B", "UMOD", "WDR19", "XPNPEP3"),
     inheritance = c("Autosomal dominant", "Autosomal recessive"),
     major_criteria = list(
       ckd_no_cause = list(
@@ -473,7 +434,7 @@ renal_panels <- list(
   R204 = list(
     code        = "R204",
     name        = "Hereditary systemic amyloidosis",
-    genes       = c("TTR", "APOA1", "APOA2", "APOC2", "FGA", "GSN", "LYZ"),
+    genes       = c("APOA1", "APOA2", "APOC2", "FGA", "GSN", "LYZ", "TTR"),
     inheritance = c("Autosomal dominant"),
     major_criteria = list(
       biopsy_amyloid = list(
@@ -519,11 +480,12 @@ renal_panels <- list(
   R256 = list(
     code        = "R256",
     name        = "Nephrocalcinosis or nephrolithiasis",
-    genes       = c("AGXT", "GRHPR", "HOGA1", "SLC3A1", "SLC7A9", "OCRL", "CLCN5",
-                    "CASR", "CYP24A1", "SLC34A1", "SLC34A3", "ATP6V1B1", "ATP6V0A4",
-                    "SLC12A1", "KCNJ1", "CLCNKB", "CLDN16", "CLDN19", "HNF4A",
-                    "APRT", "HPRT1", "XDH", "MOCOS", "FAM20A", "PHEX",
-                    "SLC4A1", "CA2", "RRAGD", "VIPAS39", "VPS33B", "WDR72", "STRADA"),
+    genes       = c("AGXT", "ATP6V0A4", "ATP6V1B1", "BSND", "CA2", "CASR", "CLCN5",
+                    "CLCNKB", "CLDN16", "CLDN19", "CYP24A1", "FAM20A", "GRHPR",
+                    "HNF4A", "HOGA1", "HPRT1", "KCNJ1", "MOCOS", "OCRL", "PHEX",
+                    "RRAGD", "SLC12A1", "SLC22A12", "SLC2A9", "SLC34A1", "SLC34A3",
+                    "SLC3A1", "SLC4A1", "SLC7A9", "STRADA", "VIPAS39", "VPS33B",
+                    "WDR72", "XDH"),
     inheritance = c("Autosomal recessive", "Autosomal dominant", "X-linked"),
     major_criteria = list(
       nephrocalcinosis = list(
@@ -570,15 +532,44 @@ renal_panels <- list(
   R257 = list(
     code        = "R257",
     name        = "Unexplained young-onset end-stage renal disease",
-    genes       = c("COL4A3", "COL4A4", "COL4A5", "PKD1", "PKD2", "PKHD1",
-                    "UMOD", "MUC1", "REN", "HNF1B", "NPHP1", "NPHP3", "NPHP4",
-                    "NPHS1", "NPHS2", "WT1", "PLCE1", "INF2", "TRPC6",
-                    "CFH", "CFI", "C3", "CD46", "DGKE",
-                    "AGXT", "SLC3A1", "SLC7A9", "OCRL", "CLCN5",
-                    "GLA", "TTR", "ACE", "AGT", "AGTR1",
-                    "PAX2", "EYA1", "GATA3", "SALL1",
-                    "TSC1", "TSC2", "VHL", "FLCN",
-                    "MMACHC", "PMM2"),
+    genes       = c("ACE", "ACTG2", "ACTN4", "AGT", "AGTR1", "AGXT", "AHI1",
+                    "ALG5", "ALG8", "ALG9", "ALMS1", "AMN", "ANKS6", "ANOS1",
+                    "AP2S1", "APOA1", "APOA2", "APOC2", "APOE", "AQP2", "ARHGDIA",
+                    "ARL13B", "ARL6", "ARMC9", "ATP1A1", "ATP6V0A4", "ATP6V1B1",
+                    "AVPR2", "B9D2", "BBS1", "BBS10", "BBS12", "BBS2", "BBS4",
+                    "BBS5", "BBS7", "BBS9", "BNC2", "BSND", "C3", "C5orf42",
+                    "CA2", "CASR", "CC2D2A", "CD151", "CD2AP", "CD46", "CENPF",
+                    "CEP104", "CEP164", "CEP290", "CEP41", "CEP83", "CFAP47",
+                    "CFB", "CFH", "CFHR1", "CFHR2", "CFHR5", "CFI", "CHD7",
+                    "CHRM3", "CLCN5", "CLCNKB", "CLDN10", "CLDN16", "CLDN19",
+                    "CNNM2", "COL4A1", "COL4A3", "COL4A4", "COL4A5", "COQ2",
+                    "COQ6", "COQ8B", "CRB2", "CSPP1", "CTNS", "CUBN", "CUL3",
+                    "CYP24A1", "DAAM2", "DDX59", "DGKE", "DHCR7", "DLC1", "DLG5",
+                    "DNAJB11", "DSTYK", "DYNC2H1", "DZIP1L", "EYA1", "FAM20A",
+                    "FAN1", "FAT1", "FGA", "FLCN", "FN1", "FRAS1", "FREM1",
+                    "FREM2", "GANAB", "GATA3", "GATM", "GLA", "GLI3", "GLIS2",
+                    "GNA11", "GON7", "GRHPR", "GRIP1", "GSN", "HAAO", "HNF1B",
+                    "HNF4A", "HOGA1", "HPRT1", "HPSE2", "HYLS1", "ICK", "IFT122",
+                    "IFT140", "IFT172", "IFT27", "IFT43", "INF2", "INPP5E", "INVS",
+                    "IQCB1", "ITGA3", "ITGA8", "ITSN1", "KCNJ1", "KCNJ10", "KCNJ16",
+                    "KIAA0586", "KIAA0753", "KIF7", "KLHL3", "KYNU", "LAGE3",
+                    "LAMB2", "LCAT", "LMX1B", "LRIG2", "LYZ", "LZTFL1", "MAGED2",
+                    "MAGI2", "MAPKBP1", "MKKS", "MKS1", "MOCOS", "MT-TF", "MUC1",
+                    "MYH9", "MYO1E", "NEK8", "NOS1AP", "NPHP1", "NPHP3", "NPHP4",
+                    "NPHS1", "NPHS2", "NR3C2", "NUP107", "NUP133", "NUP85", "NUP93",
+                    "OCRL", "OFD1", "PAX2", "PBX1", "PDSS2", "PHEX", "PKD1", "PKD2",
+                    "PKHD1", "PLCE1", "PMM2", "PODXL", "PRDM15", "PRKCSH", "PSKH1",
+                    "REN", "RET", "RMND1", "RPGRIP1L", "RRAGD", "RRM2B", "SALL1",
+                    "SARS2", "SCARB2", "SCNN1A", "SCNN1B", "SCNN1G", "SDCCAG8",
+                    "SEC61A1", "SEC63", "SLC12A1", "SLC12A3", "SLC22A12", "SLC2A2",
+                    "SLC2A9", "SLC34A1", "SLC34A3", "SLC3A1", "SLC4A1", "SLC4A4",
+                    "SLC5A2", "SLC7A9", "SMARCAL1", "STRADA", "TBC1D8B", "TBX18",
+                    "TCTN1", "TCTN2", "TCTN3", "TMEM107", "TMEM138", "TMEM216",
+                    "TMEM231", "TMEM237", "TMEM67", "TNS2", "TP53RK", "TPRKB",
+                    "TRAF3IP1", "TRAP1", "TRIM8", "TRPC6", "TRPM6", "TSC1", "TSC2",
+                    "TTC21B", "TTC8", "TTR", "TULP3", "TXNDC15", "UMOD", "VHL",
+                    "VIPAS39", "VPS33B", "WDPCP", "WDR19", "WDR35", "WDR60",
+                    "WDR72", "WDR73", "WNK4", "WT1", "XDH", "XPNPEP3", "YRDC"),
     inheritance = c("Autosomal dominant", "Autosomal recessive", "X-linked"),
     major_criteria = list(
       young_eskd = list(
@@ -625,7 +616,7 @@ renal_panels <- list(
   R446 = list(
     code        = "R446",
     name        = "APOL1-associated nephropathy",
-    genes       = c("APOL1"),
+    genes       = c("APOL1"),  # single green gene
     inheritance = c("Autosomal recessive (risk genotype)"),
     major_criteria = list(
       high_risk_genotype = list(
