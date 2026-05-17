@@ -55,19 +55,37 @@ Genetics_app/
 
 ---
 
+## How to use the app
+
+The sidebar is organised into seven collapsible sections. Fill in as many as are relevant — Run Analysis is always available and does not require HPO term extraction.
+
+| Section | Key inputs |
+|---------|-----------|
+| Demographics | Age, sex |
+| Renal presentation | eGFR, proteinuria level, haematuria |
+| Investigations | Biopsy findings (FSGS/DMS, Alport, thin BM, TIKD fibrosis, C3G/MPGN) |
+| Family history & ancestry | Inheritance pattern, consanguinity, Cypriot/Mediterranean or African/Caribbean/Brazilian ancestry |
+| Extra-renal features | Hearing loss, ocular abnormality, liver cysts, early hypertension, etc. |
+| Clinical context | Transplant consideration, complement therapy, management indication, kidney donor assessment, APOL1 consent |
+| Clinical vignette *(optional)* | Free-text summary — paste to extract HPO terms for Bayesian scoring |
+
+HPO term extraction uses the Anthropic API. Review extracted terms, remove irrelevant ones, and add missing ones manually before running analysis. If no vignette is provided the Bayesian chart still runs using age, family history and consanguinity modifiers.
+
+---
+
 ## How the eligibility scoring works
 
 Eligibility is assessed in two layers:
 
 **Layer 1 — Strict NHS criteria** (`data/strict_criteria.R`)
 
-Each panel has a set of `required` criteria (ALL must be met) and `any_of` criteria (at least ONE must be met), derived directly from the NHS Rare & Inherited Disease Eligibility Criteria. Criteria are marked `assessable = TRUE` if they can be checked from the structured inputs (age, eGFR, haematuria, proteinuria, family history, extra-renal features, HPO terms), or `assessable = FALSE` if they require clinical information not captured in the tool (e.g. biopsy results, ancestry). Non-assessable criteria are shown as amber advisory items.
+Each panel has `required` criteria (ALL must be met) and `any_of` criteria (at least ONE must be met), derived directly from the NHS Rare & Inherited Disease Eligibility Criteria. Nearly all criteria are now assessable from the structured form inputs, including biopsy findings, ancestry, and clinical context. Any remaining non-assessable criteria (e.g. "no identifiable cause" for R257, expert-centre tubulopathy for R198) are shown as amber advisory items.
 
 Layer 1 result: `met` / `partial` / `not_met`.
 
 **Layer 2 — HPO and structured parameter matching** (`data/panels.R`, `R/eligibility.R`)
 
-Scores how many of the panel's `major_criteria` are satisfied by the confirmed HPO terms and structured inputs, and counts overlap between confirmed HPO terms and the panel's `hpo_relevant` list.
+Scores how many of the panel's `major_criteria` are satisfied by confirmed HPO terms and structured inputs, and counts overlap with the panel's `hpo_relevant` HPO list.
 
 **Final verdict:**
 - `not_met` at Layer 1 → **Unlikely eligible**
@@ -123,8 +141,9 @@ Open `data/panels.R`. Each panel is an entry in the `renal_panels` named list:
 
 - **Add a new panel:** Copy an existing block, change the code, and update all fields.
 - **Update gene lists:** Replace the `genes` vector. Source TSV files from PanelApp; filter to `GEL_Status == 3` (green).
-- **Update strict criteria:** Edit `data/strict_criteria.R`. Each criterion needs `description`, `parameter`, `value`, and `assessable` fields.
-- **Modify HPO-level criteria:** Edit the `major_criteria` list in `data/panels.R`. Parameters: `"hpo_terms"`, `"age"`, `"proteinuria"`, `"haematuria"`, `"family_history"`, `"extra_renal"`, `"egfr"`, `"consanguinity"`, `"free_text"`.
+- **Update strict criteria:** Edit `data/strict_criteria.R`. Each criterion needs `description`, `parameter`, `value`, and `assessable` fields. Supported parameters: `"hpo_terms"`, `"age"`, `"egfr"`, `"proteinuria"`, `"haematuria"`, `"family_history"`, `"extra_renal"`, `"biopsy_results"`, `"ancestry"`, `"clinical_context"`, `"free_text"`.
+- **Modify HPO-level criteria:** Edit the `major_criteria` list in `data/panels.R`. Uses the same parameter names (except `biopsy_results`, `ancestry`, `clinical_context` which are Layer 1 only).
+- **Add a new biopsy finding, ancestry, or clinical context option:** Add the choice string to both the `checkboxGroupInput` in `app.R` and the `value` field of the relevant criterion in `data/strict_criteria.R`. The strings must match exactly.
 
 ---
 
@@ -143,7 +162,8 @@ Open `data/bayes_params.R`:
 
 - **Not validated for clinical use.** Posterior probabilities are decision-support estimates derived from approximated likelihood ratios.
 - Panel criteria are sourced from **NHS Rare & Inherited Disease Eligibility Criteria v9** and PanelApp Genomics England. Always check [PanelApp](https://panelapp.genomicsengland.co.uk) for current gene lists and criteria.
-- HPO extraction depends on the Anthropic API (`claude-sonnet-4-5`). Review extracted terms before running analysis.
+- HPO extraction uses the Anthropic API (`claude-sonnet-4-5`) and requires `ANTHROPIC_API_KEY` to be set. It is optional — the eligibility table is fully functional without it.
+- All strict criteria for biopsy findings, ancestry, and clinical context are now captured via the structured form; very few criteria remain non-assessable.
 - The Bayesian model assumes conditional independence of HPO features given the diagnosis, which is a simplification.
 - Always refer patients to a clinical genetics service for formal assessment and testing.
 
