@@ -2,17 +2,23 @@
 # data/bayes_params.R
 # Bayesian parameters for renal genetic diagnosis probability estimation
 #
-# Conditions modelled (10 total):
+# Conditions modelled (9 total):
 #   ADPKD       — Autosomal dominant PKD (PKD1/PKD2)
 #   ARPKD       — Autosomal recessive PKD (PKHD1)
 #   Alport      — Alport syndrome / thin BM nephropathy (COL4A3/4/5)
 #   FSGS        — Genetic FSGS / SRNS (NPHS1/2, INF2 etc.)
-#   CAKUT       — Congenital anomalies of kidney & urinary tract
 #   Tubulopathy — Inherited tubulopathies (Bartter, Gitelman, RTA etc.)
 #   aHUS        — Atypical HUS (complement pathway)
 #   TIKD        — Tubulointerstitial kidney disease (UMOD, MUC1, REN etc.)
 #   HeredAmyloid— Hereditary systemic amyloidosis (TTR, APOA1 etc.)
 #   C3G         — C3 glomerulopathy / MPGN (CFH, C3, CFHR5 etc.)
+#
+# NOTE: CAKUT (congenital anomalies of kidney & urinary tract) is intentionally
+# excluded from the Bayesian model. There is no dedicated NHS GT Directory CAKUT
+# panel; CAKUT genes are instead covered by the R257 super-panel (unexplained
+# young-onset ESKD). CAKUT-relevant HPO terms (hydronephrosis, renal dysplasia,
+# VUR, horseshoe kidney) are therefore mapped to R257 eligibility scoring in
+# data/panels.R rather than driving a separate Bayesian condition.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -23,7 +29,6 @@ condition_priors <- c(
   ARPKD        = 1 / 20000,
   Alport       = 1 / 5000,
   FSGS         = 1 / 10000,
-  CAKUT        = 1 / 500,
   Tubulopathy  = 1 / 50000,
   aHUS         = 1 / 100000,
   TIKD         = 1 / 50000,    # UMOD ~1/1000 of CKD; CKD prevalence ~5%
@@ -45,7 +50,6 @@ hpo_lr_positive <- list(
     ARPKD        = 80,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 3.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 3.0,   # DNAJB11 causes ADPKD-like cysts
@@ -60,7 +64,6 @@ hpo_lr_positive <- list(
     ARPKD        = 15,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 4.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 2.0,
@@ -75,7 +78,6 @@ hpo_lr_positive <- list(
     ARPKD        = 2.0,
     Alport       = 25.0,
     FSGS         = 4.0,
-    CAKUT        = 2.0,
     Tubulopathy  = 1.0,
     aHUS         = 5.0,
     TIKD         = 2.0,
@@ -90,7 +92,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 18.0,
     FSGS         = 1.0,
-    CAKUT        = 1.5,
     Tubulopathy  = 2.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -105,7 +106,6 @@ hpo_lr_positive <- list(
     ARPKD        = 3.0,
     Alport       = 6.0,
     FSGS         = 35.0,
-    CAKUT        = 2.0,
     Tubulopathy  = 3.0,
     aHUS         = 8.0,
     TIKD         = 3.0,
@@ -120,7 +120,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 3.0,
     FSGS         = 40.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 1.0,
     aHUS         = 3.0,
     TIKD         = 1.0,
@@ -135,7 +134,6 @@ hpo_lr_positive <- list(
     ARPKD        = 25.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -150,7 +148,6 @@ hpo_lr_positive <- list(
     ARPKD        = 30.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -165,13 +162,19 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
     HeredAmyloid = 1.0,
     C3G          = 1.0
   ),
+
+  # HP:0000126 (Hydronephrosis), HP:0000110 (Renal dysplasia),
+  # HP:0000085 (Horseshoe kidney), HP:0000076 (VUR) are retained in
+  # hpo_lr_positive with neutral LRs for all remaining conditions, so that
+  # vignette-extracted structural anomaly terms do not break the model.
+  # Their primary role is now to boost R257 eligibility via hpo_relevant
+  # matching in data/panels.R.
 
   "HP:0000126" = list(  # Hydronephrosis
     label        = "Hydronephrosis",
@@ -180,7 +183,6 @@ hpo_lr_positive <- list(
     ARPKD        = 3.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 18.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -195,7 +197,6 @@ hpo_lr_positive <- list(
     ARPKD        = 2.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 22.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -210,7 +211,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 30.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -225,7 +225,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.5,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 20.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -240,7 +239,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 22.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -255,7 +253,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 18.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -270,7 +267,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 15.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -285,7 +281,6 @@ hpo_lr_positive <- list(
     ARPKD        = 2.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.5,
     Tubulopathy  = 20.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -300,7 +295,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 2.0,
     Tubulopathy  = 10.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -315,7 +309,6 @@ hpo_lr_positive <- list(
     ARPKD        = 2.0,
     Alport       = 3.0,
     FSGS         = 3.0,
-    CAKUT        = 2.0,
     Tubulopathy  = 2.0,
     aHUS         = 30.0,
     TIKD         = 2.0,
@@ -330,7 +323,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 1.0,
     aHUS         = 25.0,
     TIKD         = 1.0,
@@ -345,7 +337,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.5,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 1.0,
     aHUS         = 20.0,
     TIKD         = 3.0,   # anaemia disproportionate to CKD degree (REN mutations)
@@ -360,7 +351,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 1.0,
     aHUS         = 80.0,
     TIKD         = 1.0,
@@ -375,7 +365,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 14.0,
     FSGS         = 1.0,
-    CAKUT        = 2.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -390,7 +379,6 @@ hpo_lr_positive <- list(
     ARPKD        = 4.0,
     Alport       = 8.0,
     FSGS         = 7.0,
-    CAKUT        = 4.0,
     Tubulopathy  = 3.0,
     aHUS         = 5.0,
     TIKD         = 6.0,
@@ -405,7 +393,6 @@ hpo_lr_positive <- list(
     ARPKD        = 5.0,
     Alport       = 10.0,
     FSGS         = 8.0,
-    CAKUT        = 4.0,
     Tubulopathy  = 2.0,
     aHUS         = 6.0,
     TIKD         = 5.0,
@@ -420,7 +407,6 @@ hpo_lr_positive <- list(
     ARPKD        = 3.0,
     Alport       = 2.0,
     FSGS         = 2.0,
-    CAKUT        = 2.0,
     Tubulopathy  = 1.5,
     aHUS         = 3.0,
     TIKD         = 3.0,
@@ -435,7 +421,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.5,
     FSGS         = 12.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 1.0,
     aHUS         = 2.0,
     TIKD         = 1.0,
@@ -450,7 +435,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 14.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -467,7 +451,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 5.0,
     aHUS         = 1.0,
     TIKD         = 15.0,  # cardinal feature of UMOD/MUC1 mutations
@@ -482,7 +465,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -497,7 +479,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -512,7 +493,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 8.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -527,7 +507,6 @@ hpo_lr_positive <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 10.0,
     aHUS         = 1.0,
     TIKD         = 5.0,
@@ -541,14 +520,14 @@ hpo_lr_positive <- list(
 # 3. NEGATIVE LIKELIHOOD RATIOS for KEY terms (when absent)
 # -----------------------------------------------------------------------------
 hpo_lr_negative <- list(
-  "HP:0000113" = c(ADPKD=0.05, ARPKD=0.08, Alport=1.0,  FSGS=1.0,  CAKUT=0.7,  Tubulopathy=1.0, aHUS=1.0,  TIKD=0.9,  HeredAmyloid=1.0, C3G=1.0),
-  "HP:0000790" = c(ADPKD=0.6,  ARPKD=0.9,  Alport=0.2,  FSGS=0.7,  CAKUT=0.8,  Tubulopathy=1.0, aHUS=0.7,  TIKD=0.8,  HeredAmyloid=1.0, C3G=0.5),
-  "HP:0000407" = c(ADPKD=1.0,  ARPKD=1.0,  Alport=0.4,  FSGS=1.0,  CAKUT=1.0,  Tubulopathy=0.9, aHUS=1.0,  TIKD=1.0,  HeredAmyloid=0.9, C3G=1.0),
-  "HP:0000093" = c(ADPKD=0.7,  ARPKD=0.8,  Alport=0.6,  FSGS=0.3,  CAKUT=0.8,  Tubulopathy=0.8, aHUS=0.6,  TIKD=0.7,  HeredAmyloid=0.5, C3G=0.4),
-  "HP:0000100" = c(ADPKD=1.0,  ARPKD=1.0,  Alport=0.8,  FSGS=0.2,  CAKUT=1.0,  Tubulopathy=1.0, aHUS=0.8,  TIKD=1.0,  HeredAmyloid=0.7, C3G=0.7),
-  "HP:0001873" = c(ADPKD=1.0,  ARPKD=1.0,  Alport=1.0,  FSGS=1.0,  CAKUT=1.0,  Tubulopathy=1.0, aHUS=0.3,  TIKD=1.0,  HeredAmyloid=1.0, C3G=0.8),
-  "HP:0005575" = c(ADPKD=1.0,  ARPKD=1.0,  Alport=1.0,  FSGS=1.0,  CAKUT=1.0,  Tubulopathy=1.0, aHUS=0.15, TIKD=1.0,  HeredAmyloid=1.0, C3G=0.7),
-  "HP:0002150" = c(ADPKD=1.0,  ARPKD=1.0,  Alport=1.0,  FSGS=1.0,  CAKUT=1.0,  Tubulopathy=0.4, aHUS=1.0,  TIKD=1.0,  HeredAmyloid=1.0, C3G=1.0)
+  "HP:0000113" = c(ADPKD=0.05, ARPKD=0.08, Alport=1.0,  FSGS=1.0,  Tubulopathy=1.0, aHUS=1.0,  TIKD=0.9,  HeredAmyloid=1.0, C3G=1.0),
+  "HP:0000790" = c(ADPKD=0.6,  ARPKD=0.9,  Alport=0.2,  FSGS=0.7,  Tubulopathy=1.0, aHUS=0.7,  TIKD=0.8,  HeredAmyloid=1.0, C3G=0.5),
+  "HP:0000407" = c(ADPKD=1.0,  ARPKD=1.0,  Alport=0.4,  FSGS=1.0,  Tubulopathy=0.9, aHUS=1.0,  TIKD=1.0,  HeredAmyloid=0.9, C3G=1.0),
+  "HP:0000093" = c(ADPKD=0.7,  ARPKD=0.8,  Alport=0.6,  FSGS=0.3,  Tubulopathy=0.8, aHUS=0.6,  TIKD=0.7,  HeredAmyloid=0.5, C3G=0.4),
+  "HP:0000100" = c(ADPKD=1.0,  ARPKD=1.0,  Alport=0.8,  FSGS=0.2,  Tubulopathy=1.0, aHUS=0.8,  TIKD=1.0,  HeredAmyloid=0.7, C3G=0.7),
+  "HP:0001873" = c(ADPKD=1.0,  ARPKD=1.0,  Alport=1.0,  FSGS=1.0,  Tubulopathy=1.0, aHUS=0.3,  TIKD=1.0,  HeredAmyloid=1.0, C3G=0.8),
+  "HP:0005575" = c(ADPKD=1.0,  ARPKD=1.0,  Alport=1.0,  FSGS=1.0,  Tubulopathy=1.0, aHUS=0.15, TIKD=1.0,  HeredAmyloid=1.0, C3G=0.7),
+  "HP:0002150" = c(ADPKD=1.0,  ARPKD=1.0,  Alport=1.0,  FSGS=1.0,  Tubulopathy=0.4, aHUS=1.0,  TIKD=1.0,  HeredAmyloid=1.0, C3G=1.0)
 )
 
 # -----------------------------------------------------------------------------
@@ -560,7 +539,6 @@ family_history_modifiers <- list(
     ARPKD        = 1.0,
     Alport       = 4.0,
     FSGS         = 5.0,
-    CAKUT        = 6.0,
     Tubulopathy  = 3.0,
     aHUS         = 4.0,
     TIKD         = 8.0,   # UMOD, MUC1, REN all AD
@@ -572,7 +550,6 @@ family_history_modifiers <- list(
     ARPKD        = 8.0,
     Alport       = 3.0,
     FSGS         = 6.0,
-    CAKUT        = 4.0,
     Tubulopathy  = 5.0,
     aHUS         = 4.0,
     TIKD         = 2.0,   # nephronophthisis (NPHP genes) is AR
@@ -584,7 +561,6 @@ family_history_modifiers <- list(
     ARPKD        = 1.0,
     Alport       = 10.0,
     FSGS         = 2.0,
-    CAKUT        = 2.0,
     Tubulopathy  = 2.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -596,7 +572,6 @@ family_history_modifiers <- list(
     ARPKD        = 1.5,
     Alport       = 2.0,
     FSGS         = 2.0,
-    CAKUT        = 2.0,
     Tubulopathy  = 1.5,
     aHUS         = 1.5,
     TIKD         = 2.0,
@@ -608,7 +583,6 @@ family_history_modifiers <- list(
     ARPKD        = 1.0,
     Alport       = 1.0,
     FSGS         = 1.0,
-    CAKUT        = 1.0,
     Tubulopathy  = 1.0,
     aHUS         = 1.0,
     TIKD         = 1.0,
@@ -626,7 +600,6 @@ consanguinity_modifiers <- list(
     ARPKD        = 6.0,
     Alport       = 4.0,
     FSGS         = 5.0,
-    CAKUT        = 2.0,
     Tubulopathy  = 5.0,
     aHUS         = 3.0,
     TIKD         = 2.0,   # NPHP genes are AR
@@ -643,18 +616,16 @@ names(consanguinity_modifiers$Unknown) <- names(condition_priors)
 # 6. AGE MODIFIERS
 # -----------------------------------------------------------------------------
 age_modifier <- function(age_years) {
-  mods <- c(ADPKD=1.0, ARPKD=1.0, Alport=1.0, FSGS=1.0, CAKUT=1.0,
+  mods <- c(ADPKD=1.0, ARPKD=1.0, Alport=1.0, FSGS=1.0,
             Tubulopathy=1.0, aHUS=1.0, TIKD=1.0, HeredAmyloid=1.0, C3G=1.0)
   if (is.na(age_years) || is.null(age_years)) return(mods)
 
   if (age_years < 1) {
     mods["ARPKD"]  <- 15.0
-    mods["CAKUT"]  <- 8.0
     mods["FSGS"]   <- 3.0
     mods["C3G"]    <- 2.0
   } else if (age_years < 18) {
     mods["ARPKD"]        <- 8.0
-    mods["CAKUT"]        <- 5.0
     mods["Alport"]       <- 2.0
     mods["FSGS"]         <- 3.0
     mods["Tubulopathy"]  <- 2.0
@@ -663,7 +634,6 @@ age_modifier <- function(age_years) {
   } else if (age_years < 30) {
     mods["Alport"]       <- 2.0
     mods["FSGS"]         <- 3.0
-    mods["CAKUT"]        <- 2.0
     mods["Tubulopathy"]  <- 1.5
     mods["C3G"]          <- 2.0
     mods["HeredAmyloid"] <- 0.5
@@ -705,7 +675,6 @@ condition_labels <- c(
   ARPKD        = "ARPKD (PKHD1)",
   Alport       = "Alport Syndrome (COL4A3/4/5)",
   FSGS         = "Genetic FSGS / SRNS",
-  CAKUT        = "CAKUT",
   Tubulopathy  = "Inherited Tubulopathy",
   aHUS         = "Atypical HUS (complement)",
   TIKD         = "Tubulointerstitial Kidney Disease",
@@ -718,7 +687,6 @@ condition_colours <- c(
   ARPKD        = "#A23B72",
   Alport       = "#F18F01",
   FSGS         = "#C73E1D",
-  CAKUT        = "#3B1F2B",
   Tubulopathy  = "#44BBA4",
   aHUS         = "#7B2D8B",
   TIKD         = "#1D7A4E",

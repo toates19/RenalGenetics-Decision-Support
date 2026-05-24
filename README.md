@@ -166,7 +166,7 @@ Gene lists sourced from PanelApp Genomics England; only green-rated (GEL_Status 
 
 ---
 
-## Bayesian model — conditions modelled (10)
+## Bayesian model — conditions modelled (9)
 
 | Condition | Key genes |
 |-----------|-----------|
@@ -174,12 +174,13 @@ Gene lists sourced from PanelApp Genomics England; only green-rated (GEL_Status 
 | ARPKD | PKHD1 |
 | Alport syndrome | COL4A3, COL4A4, COL4A5 |
 | Genetic FSGS / SRNS | NPHS1, NPHS2, INF2 |
-| CAKUT | PAX2, HNF1B, ROBO2 |
 | Inherited tubulopathy | SLC12A3, CLCNKB, UMOD |
 | Atypical HUS | CFH, CFI, C3, CD46 |
 | Tubulointerstitial kidney disease | UMOD, MUC1, REN |
 | Hereditary amyloidosis | TTR, APOA1, GSN |
 | C3 glomerulopathy / MPGN | CFH, C3, CFHR5 |
+
+CAKUT is intentionally excluded from the Bayesian model. There is no dedicated NHS GT Directory CAKUT panel; genes implicated in CAKUT (PAX2, HNF1B, EYA1, SALL1, RET etc.) are covered by the R257 super-panel. Structural anomaly HPO terms (hydronephrosis, renal dysplasia, horseshoe kidney, VUR) therefore feed R257 eligibility scoring rather than a separate Bayesian condition.
 
 Posterior probabilities are updated from population priors using likelihood ratios for confirmed HPO terms, plus modifiers for family history pattern, consanguinity, and age at presentation.
 

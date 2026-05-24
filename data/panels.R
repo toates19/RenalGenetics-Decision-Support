@@ -581,6 +581,11 @@ renal_panels <- list(
         description = "Standard workup has not identified diabetic nephropathy, chronic obstruction, or vasculitis as the primary cause",
         parameter   = "free_text",
         value       = NULL
+      ),
+      structural_anomaly = list(
+        description = "Structural renal anomaly suggesting CAKUT aetiology (hydronephrosis, renal dysplasia/hypoplasia, horseshoe kidney, or vesicoureteral reflux)",
+        parameter   = "hpo_terms",
+        value       = c("HP:0000126", "HP:0000110", "HP:0000085", "HP:0000076")
       )
     ),
     supportive_criteria = list(
@@ -607,7 +612,13 @@ renal_panels <- list(
       "HP:0000790",  # Haematuria
       "HP:0000407",  # Sensorineural hearing loss
       "HP:0001395",  # Hepatic fibrosis
-      "HP:0000478"   # Abnormality of the eye
+      "HP:0000478",  # Abnormality of the eye
+      # CAKUT-relevant structural anomaly terms (no dedicated panel; R257 is the
+      # appropriate catch-all for these patients)
+      "HP:0000126",  # Hydronephrosis
+      "HP:0000110",  # Renal dysplasia / hypoplasia
+      "HP:0000085",  # Horseshoe kidney
+      "HP:0000076"   # Vesicoureteral reflux
     ),
     notes       = "Virtual super-panel used when a specific diagnosis has not been reached through targeted testing (R193–R202) but genetic aetiology is suspected. Contains genes from all major inherited renal disease categories. Genome-wide sequencing (WGS) is often used for this indication. Collagen IV nephropathy (Alport) and ADPKD account for a large proportion of treatable diagnoses found.",
     panelapp_url = "https://panelapp.genomicsengland.co.uk/panels/678/"
