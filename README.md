@@ -213,7 +213,7 @@ Open `data/bayes_params.R`:
 
 - **Not validated for clinical use.** Posterior probabilities are decision-support estimates derived from approximated likelihood ratios.
 - Panel criteria are sourced from **NHS Rare & Inherited Disease Eligibility Criteria v9** and PanelApp Genomics England. Always check [PanelApp](https://panelapp.genomicsengland.co.uk) for current gene lists and criteria.
-- HPO extraction uses the Anthropic API (`claude-sonnet-4-5`) and requires `ANTHROPIC_API_KEY` to be set. It is optional — all eligibility criteria and the Bayesian model are fully functional without it.
+- HPO extraction uses the Anthropic API (`claude-sonnet-4-6`) and requires `ANTHROPIC_API_KEY` to be set. It is optional — all eligibility criteria and the Bayesian model are fully functional without it.
 - The Bayesian model assumes conditional independence of HPO features given the diagnosis, which is a simplification.
 - Always refer patients to a clinical genetics service for formal assessment and testing.
 

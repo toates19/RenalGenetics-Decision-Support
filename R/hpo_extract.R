@@ -24,7 +24,7 @@ extract_hpo_terms <- function(vignette, age, sex, egfr, proteinuria,
   )
 
   body <- list(
-    model = "claude-sonnet-4-5",
+    model = "claude-sonnet-4-6",
     max_tokens = 1024,
     system = paste0(
       "You are a clinical genetics assistant. Extract HPO (Human Phenotype Ontology) terms ",
