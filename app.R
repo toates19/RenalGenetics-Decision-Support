@@ -500,6 +500,7 @@ server <- function(input, output, session) {
       rv$posterior_df <- run_bayesian_update(
         confirmed_hpo_ids        = all_hpo_ids,
         age                      = age_val,
+        sex                      = input$sex,
         family_history           = input$family_history,
         consanguinity            = input$consanguinity,
         condition_priors         = condition_priors,
@@ -507,6 +508,7 @@ server <- function(input, output, session) {
         hpo_lr_negative          = hpo_lr_negative,
         family_history_modifiers = family_history_modifiers,
         consanguinity_modifiers  = consanguinity_modifiers,
+        sex_alport_modifiers     = sex_alport_modifiers,
         age_modifier_fn          = age_modifier
       )
 

@@ -75,11 +75,11 @@ derive_all_hpo_from_inputs <- function(
   unique(ids)
 }
 
-run_bayesian_update <- function(confirmed_hpo_ids, age, family_history,
+run_bayesian_update <- function(confirmed_hpo_ids, age, sex, family_history,
                                  consanguinity, condition_priors,
                                  hpo_lr_positive, hpo_lr_negative,
                                  family_history_modifiers, consanguinity_modifiers,
-                                 age_modifier_fn) {
+                                 sex_alport_modifiers, age_modifier_fn) {
 
   conditions <- names(condition_priors)
   posterior  <- setNames(as.numeric(condition_priors), conditions)
@@ -98,6 +98,16 @@ run_bayesian_update <- function(confirmed_hpo_ids, age, family_history,
   if (!is.null(cons_mod)) {
     for (cond in conditions) {
       m <- cons_mod[[cond]]
+      if (!is.null(m)) posterior[cond] <- posterior[cond] * m
+    }
+  }
+
+  # Apply sex modifier (Alport XL vs AR discrimination)
+  sex_key <- if (!is.null(sex) && sex %in% names(sex_alport_modifiers)) sex else "Unknown"
+  sex_mod <- sex_alport_modifiers[[sex_key]]
+  if (!is.null(sex_mod)) {
+    for (cond in conditions) {
+      m <- sex_mod[[cond]]
       if (!is.null(m)) posterior[cond] <- posterior[cond] * m
     }
   }
