@@ -185,6 +185,7 @@ build_posterior_plot <- function(posterior_df, condition_labels, condition_colou
     hovertemplate = paste0(
       "<b>%{y}</b><br>",
       "Posterior: %{x:.1f}%<br>",
+      "(error bars = uncertainty range)<br>",
       "<extra></extra>"
     )
   ) |>

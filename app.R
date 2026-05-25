@@ -101,7 +101,7 @@ ui <- page_fillable(
     tags$span(
       style = "color:#fff; font-size:1.15rem; font-weight:700; letter-spacing:.02em;",
       tags$img(
-        src    = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/NHS_logo.svg/40px-NHS_logo.svg.png",
+        src    = "nhs_logo.png",
         height = "24px",
         style  = "margin-right:10px; vertical-align:middle;"
       ),
@@ -786,10 +786,14 @@ server <- function(input, output, session) {
       class = "summary-box",
       tags$strong("Highest probability diagnosis: "), lbl, tags$br(),
       tags$span(style = "font-size:.9rem;",
-                sprintf("Posterior probability: %.1f%% (approx. 95%% CI: %.1f–%.1f%%)",
+                sprintf("Posterior probability: %.1f%% (uncertainty range: %.1f–%.1f%%)",
                         pct, ci_lo, ci_hi)),
       tags$br(),
-      tags$small(class = "text-muted", note)
+      tags$small(class = "text-muted", note),
+      tags$br(),
+      tags$small(class = "text-muted",
+                 style = "font-style:italic;",
+                 "Probabilities are normalised relative rankings across the conditions modelled — a genetic cause outside this list, or co-existing diagnoses, remain possible.")
     )
   })
 

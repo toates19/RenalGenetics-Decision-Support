@@ -166,11 +166,13 @@ score_panel_eligibility <- function(panel, strict, confirmed_hpo_ids, age, sex,
   } else {
     if (layer2$n_met >= 2 || layer2$n_overlap >= 3) {
       "Likely eligible"
+    } else if (layer1$result == "met") {
+      # Strict criteria fully met with no contradicting evidence → already qualifies
+      "Likely eligible"
     } else if (layer2$n_met >= 1 || layer2$n_overlap >= 1) {
       "Possibly eligible"
-    } else if (layer1$result == "partial") {
-      "Possibly eligible"
     } else {
+      # layer1 == "partial" and no supportive layer2 hits
       "Possibly eligible"
     }
   }
