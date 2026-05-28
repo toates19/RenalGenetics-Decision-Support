@@ -2,35 +2,49 @@
 # data/bayes_params.R
 # Bayesian parameters for renal genetic diagnosis probability estimation
 #
-# Conditions modelled (10 total):
-#   ADPKD       — Autosomal dominant PKD (PKD1/PKD2)
-#   ARPKD       — Autosomal recessive PKD (PKHD1)
-#   Alport_XL   — X-linked Alport syndrome (COL4A5)  ← split from Alport
-#   Alport_AR   — AR/AD Alport syndrome (COL4A3/COL4A4) ← split from Alport
-#   FSGS        — Genetic FSGS / SRNS (NPHS1/2, INF2 etc.)
-#   Tubulopathy — Inherited tubulopathies (Bartter, Gitelman, RTA etc.)
-#   aHUS        — Atypical HUS (complement pathway)
-#   TIKD        — Tubulointerstitial kidney disease (UMOD, MUC1, REN etc.)
-#   HeredAmyloid— Hereditary systemic amyloidosis (TTR, APOA1 etc.)
-#   C3G         — C3 glomerulopathy / MPGN (CFH, C3, CFHR5 etc.)
-#
-# NOTE: CAKUT intentionally excluded — see ARPKD / R257 note below.
+# Conditions modelled (18 total):
+#   PKD1          — ADPKD due to PKD1
+#   PKD2          — ADPKD due to PKD2
+#   ARPKD         — Autosomal recessive PKD (PKHD1)
+#   Alport_XL     — X-linked Alport syndrome (COL4A5)
+#   Alport_AR     — AR/AD Alport syndrome (COL4A3/COL4A4)
+#   NPHS1         — FSGS/SRNS due to NPHS1 (nephrin) — congenital nephrotic
+#   NPHS2         — FSGS/SRNS due to NPHS2 (podocin) — childhood SRNS
+#   INF2          — FSGS/SRNS due to INF2 — AD, often with CMT
+#   Tubulopathy   — Inherited tubulopathies (Bartter, Gitelman, RTA etc.)
+#   CFH_aHUS      — aHUS due to CFH (complement factor H)
+#   CD46_MCP      — aHUS due to CD46/MCP (membrane cofactor protein)
+#   CFI_aHUS      — aHUS due to CFI (complement factor I)
+#   C3_CFB        — aHUS due to C3 or CFB
+#   TIKD          — Tubulointerstitial kidney disease (UMOD, MUC1, REN etc.)
+#   TTR_Amyloid   — Hereditary TTR amyloidosis
+#   APOA1_Amyloid — Hereditary APOA1 amyloidosis
+#   GSN_Amyloid   — Hereditary gelsolin (GSN) amyloidosis
+#   C3G           — C3 glomerulopathy / MPGN
 # =============================================================================
 
 # -----------------------------------------------------------------------------
 # 1. PRIOR PROBABILITIES  (population prevalence estimates)
 # -----------------------------------------------------------------------------
 condition_priors <- c(
-  ADPKD        = 1 / 1000,
-  ARPKD        = 1 / 20000,
-  Alport_XL    = 1 / 6000,    # ~85% of Alport cases are X-linked (COL4A5)
-  Alport_AR    = 1 / 33000,   # ~15% AR/AD (COL4A3/COL4A4); combined prior ~1/5000
-  FSGS         = 1 / 10000,
-  Tubulopathy  = 1 / 50000,
-  aHUS         = 1 / 100000,
-  TIKD         = 1 / 50000,
-  HeredAmyloid = 1 / 100000,
-  C3G          = 1 / 1000000
+  PKD1          = 1 / 1300,     # ~78% of ADPKD cases
+  PKD2          = 1 / 5500,     # ~18% of ADPKD cases; later / milder
+  ARPKD         = 1 / 20000,
+  Alport_XL     = 1 / 6000,     # ~85% of Alport are X-linked (COL4A5)
+  Alport_AR     = 1 / 33000,    # ~15% AR/AD (COL4A3/COL4A4)
+  NPHS1         = 1 / 200000,   # congenital nephrotic syndrome; rare in general nephrology
+  NPHS2         = 1 / 25000,    # most common monogenic childhood FSGS/SRNS
+  INF2          = 1 / 67000,    # AD FSGS; often with Charcot-Marie-Tooth
+  Tubulopathy   = 1 / 50000,
+  CFH_aHUS      = 1 / 350000,   # ~30% of genetic aHUS; most common complement gene
+  CD46_MCP      = 1 / 650000,   # ~15% of genetic aHUS; predominantly paediatric
+  CFI_aHUS      = 1 / 1250000,  # ~8% of genetic aHUS
+  C3_CFB        = 1 / 1000000,  # ~10% of genetic aHUS (C3 + CFB combined)
+  TIKD          = 1 / 50000,
+  TTR_Amyloid   = 1 / 110000,   # ~90% of hereditary systemic amyloidosis
+  APOA1_Amyloid = 1 / 2000000,  # ~5% of hereditary systemic amyloidosis
+  GSN_Amyloid   = 1 / 5000000,  # ~2% of hereditary systemic amyloidosis
+  C3G           = 1 / 1000000
 )
 
 # -----------------------------------------------------------------------------
@@ -41,560 +55,856 @@ condition_priors <- c(
 hpo_lr_positive <- list(
 
   "HP:0000113" = list(  # Polycystic kidney
-    label        = "Polycystic kidney / bilateral renal cysts",
-    key          = TRUE,
-    ADPKD        = 120,
-    ARPKD        = 80,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 3.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Polycystic kidney / bilateral renal cysts",
+    key           = TRUE,
+    PKD1          = 120,
+    PKD2          = 120,
+    ARPKD         = 80,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 3.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0005584" = list(  # Renal cyst (unilateral/unspecified)
-    label        = "Renal cyst (unilateral or unspecified)",
-    key          = FALSE,
-    ADPKD        = 20,
-    ARPKD        = 15,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 2.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Renal cyst (unilateral or unspecified)",
+    key           = FALSE,
+    PKD1          = 20,
+    PKD2          = 20,
+    ARPKD         = 15,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 2.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0000790" = list(  # Haematuria
-    label        = "Haematuria (microscopic or macroscopic)",
-    key          = TRUE,
-    ADPKD        = 8.0,
-    ARPKD        = 2.0,
-    Alport_XL    = 25.0,   # haematuria universal in hemizygous males; common in female carriers
-    Alport_AR    = 20.0,   # universal in AR, but mixed sex so slightly lower discriminatory LR
-    FSGS         = 4.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 5.0,
-    TIKD         = 2.0,
-    HeredAmyloid = 1.0,
-    C3G          = 12.0
+    label         = "Haematuria (microscopic or macroscopic)",
+    key           = TRUE,
+    PKD1          = 8.0,
+    PKD2          = 6.0,   # haematuria less common in milder PKD2
+    ARPKD         = 2.0,
+    Alport_XL     = 25.0,
+    Alport_AR     = 20.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 5.0,
+    CD46_MCP      = 5.0,
+    CFI_aHUS      = 5.0,
+    C3_CFB        = 5.0,
+    TIKD          = 2.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.5,
+    GSN_Amyloid   = 1.0,
+    C3G           = 12.0
   ),
 
   "HP:0000407" = list(  # Sensorineural hearing loss
-    label        = "Sensorineural hearing loss",
-    key          = TRUE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 20.0,   # ~80–90% of XL males; ~60% female carriers
-    Alport_AR    = 15.0,   # ~80% of AR Alport — similar but slightly less discriminatory
-    FSGS         = 1.0,
-    Tubulopathy  = 2.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 3.0,
-    C3G          = 1.0
+    label         = "Sensorineural hearing loss",
+    key           = TRUE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 20.0,
+    Alport_AR     = 15.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 2.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 3.0,   # cranial nerve (CN VIII) involvement in gelsolin amyloidosis
+    C3G           = 1.0
   ),
 
   "HP:0000093" = list(  # Proteinuria (sub-nephrotic)
-    label        = "Proteinuria (sub-nephrotic)",
-    key          = TRUE,
-    ADPKD        = 4.0,
-    ARPKD        = 3.0,
-    Alport_XL    = 6.0,
-    Alport_AR    = 6.0,
-    FSGS         = 35.0,
-    Tubulopathy  = 3.0,
-    aHUS         = 8.0,
-    TIKD         = 3.0,
-    HeredAmyloid = 8.0,
-    C3G          = 10.0
+    label         = "Proteinuria (sub-nephrotic)",
+    key           = TRUE,
+    PKD1          = 4.0,
+    PKD2          = 3.0,
+    ARPKD         = 3.0,
+    Alport_XL     = 6.0,
+    Alport_AR     = 6.0,
+    NPHS1         = 40.0,  # always massive proteinuria (congenital nephrotic)
+    NPHS2         = 35.0,
+    INF2          = 25.0,
+    Tubulopathy   = 3.0,
+    CFH_aHUS      = 8.0,
+    CD46_MCP      = 8.0,
+    CFI_aHUS      = 8.0,
+    C3_CFB        = 8.0,
+    TIKD          = 3.0,
+    TTR_Amyloid   = 8.0,
+    APOA1_Amyloid = 12.0,
+    GSN_Amyloid   = 5.0,
+    C3G           = 10.0
   ),
 
   "HP:0000100" = list(  # Nephrotic syndrome
-    label        = "Nephrotic syndrome",
-    key          = TRUE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 3.0,
-    Alport_AR    = 3.0,
-    FSGS         = 40.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 3.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 6.0,
-    C3G          = 8.0
+    label         = "Nephrotic syndrome",
+    key           = TRUE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 3.0,
+    Alport_AR     = 3.0,
+    NPHS1         = 60.0,  # defining feature of congenital nephrotic syndrome
+    NPHS2         = 40.0,
+    INF2          = 25.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 3.0,
+    CD46_MCP      = 3.0,
+    CFI_aHUS      = 3.0,
+    C3_CFB        = 3.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 6.0,
+    APOA1_Amyloid = 10.0,
+    GSN_Amyloid   = 4.0,
+    C3G           = 8.0
   ),
 
   "HP:0001407" = list(  # Hepatic cysts
-    label        = "Hepatic cysts",
-    key          = FALSE,
-    ADPKD        = 15.0,
-    ARPKD        = 25.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Hepatic cysts",
+    key           = FALSE,
+    PKD1          = 15.0,
+    PKD2          = 15.0,
+    ARPKD         = 25.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0001395" = list(  # Hepatic fibrosis
-    label        = "Hepatic fibrosis / congenital hepatic fibrosis",
-    key          = FALSE,
-    ADPKD        = 2.0,
-    ARPKD        = 30.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Hepatic fibrosis / congenital hepatic fibrosis",
+    key           = FALSE,
+    PKD1          = 2.0,
+    PKD2          = 2.0,
+    ARPKD         = 30.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
-  "HP:0002616" = list(  # Aortic root aneurysm
-    label        = "Aortic root aneurysm / intracranial aneurysm",
-    key          = FALSE,
-    ADPKD        = 12.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+  "HP:0002616" = list(  # Aortic root / intracranial aneurysm
+    label         = "Aortic root aneurysm / intracranial aneurysm",
+    key           = FALSE,
+    PKD1          = 15.0,  # intracranial aneurysms ~8% PKD1 vs ~3% PKD2
+    PKD2          = 6.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0000126" = list(  # Hydronephrosis
-    label        = "Hydronephrosis",
-    key          = FALSE,
-    ADPKD        = 2.0,
-    ARPKD        = 3.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Hydronephrosis",
+    key           = FALSE,
+    PKD1          = 2.0,
+    PKD2          = 2.0,
+    ARPKD         = 3.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0000110" = list(  # Renal dysplasia
-    label        = "Renal dysplasia / hypoplasia",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 2.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Renal dysplasia / hypoplasia",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 2.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0000085" = list(  # Horseshoe kidney
-    label        = "Horseshoe kidney",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Horseshoe kidney",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0000076" = list(  # Vesicoureteral reflux
-    label        = "Vesicoureteral reflux",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.5,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Vesicoureteral reflux",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.5,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0002150" = list(  # Hypercalciuria
-    label        = "Hypercalciuria",
-    key          = TRUE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 22.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Hypercalciuria",
+    key           = TRUE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 22.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0002900" = list(  # Hypokalaemia
-    label        = "Hypokalaemia",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 18.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Hypokalaemia",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 18.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0002148" = list(  # Hypophosphataemia
-    label        = "Hypophosphataemia",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 15.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Hypophosphataemia",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 15.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0000121" = list(  # Nephrocalcinosis
-    label        = "Nephrocalcinosis",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 2.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 20.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Nephrocalcinosis",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 2.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 20.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0000787" = list(  # Nephrolithiasis
-    label        = "Nephrolithiasis / renal stones",
-    key          = FALSE,
-    ADPKD        = 4.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 10.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Nephrolithiasis / renal stones",
+    key           = FALSE,
+    PKD1          = 4.0,
+    PKD2          = 4.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 10.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0001919" = list(  # Acute kidney injury
-    label        = "Acute kidney injury",
-    key          = FALSE,
-    ADPKD        = 2.0,
-    ARPKD        = 2.0,
-    Alport_XL    = 3.0,
-    Alport_AR    = 3.0,
-    FSGS         = 3.0,
-    Tubulopathy  = 2.0,
-    aHUS         = 30.0,
-    TIKD         = 2.0,
-    HeredAmyloid = 3.0,
-    C3G          = 6.0
+    label         = "Acute kidney injury",
+    key           = FALSE,
+    PKD1          = 2.0,
+    PKD2          = 2.0,
+    ARPKD         = 2.0,
+    Alport_XL     = 3.0,
+    Alport_AR     = 3.0,
+    NPHS1         = 3.0,
+    NPHS2         = 3.0,
+    INF2          = 3.0,
+    Tubulopathy   = 2.0,
+    CFH_aHUS      = 30.0,
+    CD46_MCP      = 30.0,
+    CFI_aHUS      = 30.0,
+    C3_CFB        = 30.0,
+    TIKD          = 2.0,
+    TTR_Amyloid   = 3.0,
+    APOA1_Amyloid = 3.0,
+    GSN_Amyloid   = 2.0,
+    C3G           = 6.0
   ),
 
   "HP:0001873" = list(  # Thrombocytopenia
-    label        = "Thrombocytopenia",
-    key          = TRUE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 25.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 2.0
+    label         = "Thrombocytopenia",
+    key           = TRUE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 25.0,
+    CD46_MCP      = 25.0,
+    CFI_aHUS      = 25.0,
+    C3_CFB        = 25.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 2.0
   ),
 
-  "HP:0001903" = list(  # Anaemia
-    label        = "Anaemia (haemolytic / microangiopathic)",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.5,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 20.0,
-    TIKD         = 3.0,
-    HeredAmyloid = 2.0,
-    C3G          = 3.0
+  "HP:0001903" = list(  # Anaemia (haemolytic / microangiopathic)
+    label         = "Anaemia (haemolytic / microangiopathic)",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.5,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 20.0,
+    CD46_MCP      = 20.0,
+    CFI_aHUS      = 20.0,
+    C3_CFB        = 20.0,
+    TIKD          = 3.0,
+    TTR_Amyloid   = 2.0,
+    APOA1_Amyloid = 2.0,
+    GSN_Amyloid   = 1.5,
+    C3G           = 3.0
   ),
 
   "HP:0005575" = list(  # Haemolytic uraemic syndrome
-    label        = "Haemolytic uraemic syndrome",
-    key          = TRUE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 80.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 3.0
+    label         = "Haemolytic uraemic syndrome",
+    key           = TRUE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 80.0,
+    CD46_MCP      = 80.0,
+    CFI_aHUS      = 80.0,
+    C3_CFB        = 80.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 3.0
   ),
 
-  "HP:0000504" = list(  # Ocular abnormality / anterior lenticonus
-    label        = "Ocular abnormality (anterior lenticonus, macular flecks)",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 22.0,  # anterior lenticonus in >80% of XL males; pathognomonic
-    Alport_AR    = 6.0,   # less common in AR Alport (~30–40%)
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+  "HP:0000504" = list(  # Ocular abnormality
+    label         = "Ocular abnormality (anterior lenticonus, macular flecks)",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 22.0,
+    Alport_AR     = 6.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 5.0,   # lattice corneal dystrophy pathognomonic for gelsolin amyloidosis
+    C3G           = 1.0
   ),
 
   "HP:0012622" = list(  # Chronic kidney disease
-    label        = "Chronic kidney disease",
-    key          = FALSE,
-    ADPKD        = 5.0,
-    ARPKD        = 4.0,
-    Alport_XL    = 8.0,
-    Alport_AR    = 7.0,
-    FSGS         = 7.0,
-    Tubulopathy  = 3.0,
-    aHUS         = 5.0,
-    TIKD         = 6.0,
-    HeredAmyloid = 5.0,
-    C3G          = 5.0
+    label         = "Chronic kidney disease",
+    key           = FALSE,
+    PKD1          = 5.0,
+    PKD2          = 5.0,
+    ARPKD         = 4.0,
+    Alport_XL     = 8.0,
+    Alport_AR     = 7.0,
+    NPHS1         = 7.0,
+    NPHS2         = 7.0,
+    INF2          = 6.0,
+    Tubulopathy   = 3.0,
+    CFH_aHUS      = 5.0,
+    CD46_MCP      = 5.0,
+    CFI_aHUS      = 5.0,
+    C3_CFB        = 5.0,
+    TIKD          = 6.0,
+    TTR_Amyloid   = 5.0,
+    APOA1_Amyloid = 5.0,
+    GSN_Amyloid   = 4.0,
+    C3G           = 5.0
   ),
 
   "HP:0003774" = list(  # End-stage kidney disease
-    label        = "End-stage kidney disease",
-    key          = FALSE,
-    ADPKD        = 6.0,
-    ARPKD        = 5.0,
-    Alport_XL    = 10.0,
-    Alport_AR    = 9.0,
-    FSGS         = 8.0,
-    Tubulopathy  = 2.0,
-    aHUS         = 6.0,
-    TIKD         = 5.0,
-    HeredAmyloid = 4.0,
-    C3G          = 5.0
+    label         = "End-stage kidney disease",
+    key           = FALSE,
+    PKD1          = 6.0,
+    PKD2          = 6.0,
+    ARPKD         = 5.0,
+    Alport_XL     = 10.0,
+    Alport_AR     = 9.0,
+    NPHS1         = 8.0,
+    NPHS2         = 8.0,
+    INF2          = 7.0,
+    Tubulopathy   = 2.0,
+    CFH_aHUS      = 6.0,
+    CD46_MCP      = 6.0,
+    CFI_aHUS      = 6.0,
+    C3_CFB        = 6.0,
+    TIKD          = 5.0,
+    TTR_Amyloid   = 4.0,
+    APOA1_Amyloid = 4.0,
+    GSN_Amyloid   = 3.0,
+    C3G           = 5.0
   ),
 
   "HP:0000822" = list(  # Hypertension early onset
-    label        = "Hypertension (early onset <35 years)",
-    key          = FALSE,
-    ADPKD        = 6.0,
-    ARPKD        = 3.0,
-    Alport_XL    = 2.0,
-    Alport_AR    = 2.0,
-    FSGS         = 2.0,
-    Tubulopathy  = 1.5,
-    aHUS         = 3.0,
-    TIKD         = 3.0,
-    HeredAmyloid = 1.0,
-    C3G          = 2.0
+    label         = "Hypertension (early onset <35 years)",
+    key           = FALSE,
+    PKD1          = 8.0,   # early HTN strongly associated with PKD1 (larger kidneys, earlier compression)
+    PKD2          = 4.0,
+    ARPKD         = 3.0,
+    Alport_XL     = 2.0,
+    Alport_AR     = 2.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.5,
+    CFH_aHUS      = 3.0,
+    CD46_MCP      = 3.0,
+    CFI_aHUS      = 3.0,
+    C3_CFB        = 3.0,
+    TIKD          = 3.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 2.0
   ),
 
   "HP:0000969" = list(  # Oedema
-    label        = "Oedema (periorbital or peripheral)",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.5,
-    Alport_AR    = 1.5,
-    FSGS         = 12.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 2.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 3.0,
-    C3G          = 5.0
+    label         = "Oedema (periorbital or peripheral)",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.5,
+    Alport_AR     = 1.5,
+    NPHS1         = 15.0,  # universal in congenital nephrotic syndrome
+    NPHS2         = 12.0,
+    INF2          = 8.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 2.0,
+    CD46_MCP      = 2.0,
+    CFI_aHUS      = 2.0,
+    C3_CFB        = 2.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 3.0,
+    APOA1_Amyloid = 3.0,
+    GSN_Amyloid   = 2.0,
+    C3G           = 5.0
   ),
 
   "HP:0001942" = list(  # Metabolic alkalosis
-    label        = "Metabolic alkalosis",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 14.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Metabolic alkalosis",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 14.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0001997" = list(  # Gout / hyperuricaemia
-    label        = "Gout / hyperuricaemia (disproportionate to renal function)",
-    key          = FALSE,
-    ADPKD        = 2.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 5.0,
-    aHUS         = 1.0,
-    TIKD         = 15.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Gout / hyperuricaemia (disproportionate to renal function)",
+    key           = FALSE,
+    PKD1          = 2.0,
+    PKD2          = 2.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 5.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 15.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0001638" = list(  # Cardiomyopathy
-    label        = "Cardiomyopathy",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 20.0,
-    C3G          = 1.0
+    label         = "Cardiomyopathy",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 25.0,  # restrictive cardiomyopathy cardinal in TTR amyloidosis
+    APOA1_Amyloid = 5.0,
+    GSN_Amyloid   = 3.0,
+    C3G           = 1.0
   ),
 
   "HP:0001271" = list(  # Peripheral neuropathy
-    label        = "Peripheral neuropathy / polyneuropathy",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 15.0,
-    C3G          = 1.0
+    label         = "Peripheral neuropathy / polyneuropathy",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 8.0,   # INF2 is associated with Charcot-Marie-Tooth (~70% of INF2 FSGS cases)
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 18.0,
+    APOA1_Amyloid = 8.0,
+    GSN_Amyloid   = 12.0,
+    C3G           = 1.0
   ),
 
   "HP:0003159" = list(  # Hyperoxaluria
-    label        = "Hyperoxaluria",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 8.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Hyperoxaluria",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 8.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0010934" = list(  # Hyperuricosuria
-    label        = "Hyperuricosuria",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 10.0,
-    aHUS         = 1.0,
-    TIKD         = 5.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Hyperuricosuria",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 10.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 5.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
-  # ── HPO terms generated by structured inputs (previously missing LRs) ──────
+  # ── HPO terms generated by structured inputs ─────────────────────────────────
 
   "HP:0002153" = list(  # Hyperkalaemia
-    label        = "Hyperkalaemia with acidosis (pseudohypoaldosteronism / type 4 RTA)",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 20.0,
-    aHUS         = 3.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Hyperkalaemia with acidosis (pseudohypoaldosteronism / type 4 RTA)",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 20.0,
+    CFH_aHUS      = 3.0,
+    CD46_MCP      = 3.0,
+    CFI_aHUS      = 3.0,
+    C3_CFB        = 3.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0002917" = list(  # Hypomagnesaemia
-    label        = "Hypomagnesaemia",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 25.0,
-    aHUS         = 1.0,
-    TIKD         = 2.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Hypomagnesaemia",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 25.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 2.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0000863" = list(  # Nephrogenic diabetes insipidus
-    label        = "Nephrogenic diabetes insipidus",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 30.0,
-    aHUS         = 1.0,
-    TIKD         = 2.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    label         = "Nephrogenic diabetes insipidus",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 30.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 2.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
 
   "HP:0001878" = list(  # Haemolytic anaemia (microangiopathic)
-    label        = "Haemolytic anaemia (microangiopathic / Coombs-negative)",
-    key          = FALSE,
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 18.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 3.0
+    label         = "Haemolytic anaemia (microangiopathic / Coombs-negative)",
+    key           = FALSE,
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 18.0,
+    CD46_MCP      = 18.0,
+    CFI_aHUS      = 18.0,
+    C3_CFB        = 18.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 3.0
   )
 
 )
@@ -603,14 +913,14 @@ hpo_lr_positive <- list(
 # 3. NEGATIVE LIKELIHOOD RATIOS for KEY terms (when absent)
 # -----------------------------------------------------------------------------
 hpo_lr_negative <- list(
-  "HP:0000113" = c(ADPKD=0.05, ARPKD=0.08, Alport_XL=1.0,  Alport_AR=1.0,  FSGS=1.0,  Tubulopathy=1.0, aHUS=1.0,  TIKD=0.9,  HeredAmyloid=1.0, C3G=1.0),
-  "HP:0000790" = c(ADPKD=0.6,  ARPKD=0.9,  Alport_XL=0.15, Alport_AR=0.25, FSGS=0.7,  Tubulopathy=1.0, aHUS=0.7,  TIKD=0.8,  HeredAmyloid=1.0, C3G=0.5),
-  "HP:0000407" = c(ADPKD=1.0,  ARPKD=1.0,  Alport_XL=0.35, Alport_AR=0.45, FSGS=1.0,  Tubulopathy=0.9, aHUS=1.0,  TIKD=1.0,  HeredAmyloid=0.9, C3G=1.0),
-  "HP:0000093" = c(ADPKD=0.7,  ARPKD=0.8,  Alport_XL=0.6,  Alport_AR=0.6,  FSGS=0.3,  Tubulopathy=0.8, aHUS=0.6,  TIKD=0.7,  HeredAmyloid=0.5, C3G=0.4),
-  "HP:0000100" = c(ADPKD=1.0,  ARPKD=1.0,  Alport_XL=0.8,  Alport_AR=0.8,  FSGS=0.2,  Tubulopathy=1.0, aHUS=0.8,  TIKD=1.0,  HeredAmyloid=0.7, C3G=0.7),
-  "HP:0001873" = c(ADPKD=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  FSGS=1.0,  Tubulopathy=1.0, aHUS=0.3,  TIKD=1.0,  HeredAmyloid=1.0, C3G=0.8),
-  "HP:0005575" = c(ADPKD=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  FSGS=1.0,  Tubulopathy=1.0, aHUS=0.15, TIKD=1.0,  HeredAmyloid=1.0, C3G=0.7),
-  "HP:0002150" = c(ADPKD=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  FSGS=1.0,  Tubulopathy=0.4, aHUS=1.0,  TIKD=1.0,  HeredAmyloid=1.0, C3G=1.0)
+  "HP:0000113" = c(PKD1=0.05, PKD2=0.05, ARPKD=0.08, Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=1.0, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=0.9,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=1.0),
+  "HP:0000790" = c(PKD1=0.6,  PKD2=0.7,  ARPKD=0.9,  Alport_XL=0.15, Alport_AR=0.25, NPHS1=0.8, NPHS2=0.7, INF2=0.8, Tubulopathy=1.0, CFH_aHUS=0.7,  CD46_MCP=0.7,  CFI_aHUS=0.7,  C3_CFB=0.7,  TIKD=0.8,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.5),
+  "HP:0000407" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=0.35, Alport_AR=0.45, NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=0.9, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=1.0,  TTR_Amyloid=0.9, APOA1_Amyloid=1.0, GSN_Amyloid=0.7, C3G=1.0),
+  "HP:0000093" = c(PKD1=0.7,  PKD2=0.8,  ARPKD=0.8,  Alport_XL=0.6,  Alport_AR=0.6,  NPHS1=0.2, NPHS2=0.3, INF2=0.4, Tubulopathy=0.8, CFH_aHUS=0.6,  CD46_MCP=0.6,  CFI_aHUS=0.6,  C3_CFB=0.6,  TIKD=0.7,  TTR_Amyloid=0.5, APOA1_Amyloid=0.3, GSN_Amyloid=0.6, C3G=0.4),
+  "HP:0000100" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=0.8,  Alport_AR=0.8,  NPHS1=0.1, NPHS2=0.2, INF2=0.4, Tubulopathy=1.0, CFH_aHUS=0.8,  CD46_MCP=0.8,  CFI_aHUS=0.8,  C3_CFB=0.8,  TIKD=1.0,  TTR_Amyloid=0.7, APOA1_Amyloid=0.5, GSN_Amyloid=0.8, C3G=0.7),
+  "HP:0001873" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=1.0, CFH_aHUS=0.3,  CD46_MCP=0.3,  CFI_aHUS=0.3,  C3_CFB=0.3,  TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.8),
+  "HP:0005575" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=1.0, CFH_aHUS=0.15, CD46_MCP=0.15, CFI_aHUS=0.15, C3_CFB=0.15, TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.7),
+  "HP:0002150" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=0.4, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=1.0)
 )
 
 # -----------------------------------------------------------------------------
@@ -618,64 +928,104 @@ hpo_lr_negative <- list(
 # -----------------------------------------------------------------------------
 family_history_modifiers <- list(
   "Autosomal dominant" = list(
-    ADPKD        = 10,
-    ARPKD        = 1.0,
-    Alport_XL    = 3.0,   # AD inheritance pattern inconsistent with pure XL
-    Alport_AR    = 4.0,   # AD COL4A4 (rare) or heterozygous COL4A3 — still possible
-    FSGS         = 5.0,
-    Tubulopathy  = 3.0,
-    aHUS         = 4.0,
-    TIKD         = 8.0,
-    HeredAmyloid = 10.0,
-    C3G          = 4.0
+    PKD1          = 10.0,
+    PKD2          = 10.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 3.0,
+    Alport_AR     = 4.0,
+    NPHS1         = 1.5,   # NPHS1 is AR; AD FH makes it less likely
+    NPHS2         = 1.5,   # NPHS2 is AR; AD FH makes it less likely
+    INF2          = 8.0,   # INF2 is classically AD
+    Tubulopathy   = 3.0,
+    CFH_aHUS      = 4.0,
+    CD46_MCP      = 3.0,
+    CFI_aHUS      = 4.0,
+    C3_CFB        = 4.0,
+    TIKD          = 8.0,
+    TTR_Amyloid   = 10.0,
+    APOA1_Amyloid = 8.0,
+    GSN_Amyloid   = 8.0,
+    C3G           = 4.0
   ),
   "Autosomal recessive" = list(
-    ADPKD        = 1.0,
-    ARPKD        = 8.0,
-    Alport_XL    = 1.0,   # AR pattern makes XL less likely
-    Alport_AR    = 10.0,  # strongly favours biallelic COL4A3/4
-    FSGS         = 6.0,
-    Tubulopathy  = 5.0,
-    aHUS         = 4.0,
-    TIKD         = 2.0,
-    HeredAmyloid = 1.0,
-    C3G          = 5.0
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 8.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 10.0,
+    NPHS1         = 8.0,   # NPHS1 is AR
+    NPHS2         = 8.0,   # NPHS2 is AR
+    INF2          = 1.0,
+    Tubulopathy   = 5.0,
+    CFH_aHUS      = 2.0,
+    CD46_MCP      = 1.5,
+    CFI_aHUS      = 2.0,
+    C3_CFB        = 2.0,
+    TIKD          = 2.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 5.0
   ),
   "X-linked" = list(
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 15.0,  # X-linked FH is highly specific for COL4A5 Alport
-    Alport_AR    = 1.0,
-    FSGS         = 2.0,
-    Tubulopathy  = 2.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 15.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 2.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
   "Unknown" = list(
-    ADPKD        = 2.0,
-    ARPKD        = 1.5,
-    Alport_XL    = 2.0,
-    Alport_AR    = 2.0,
-    FSGS         = 2.0,
-    Tubulopathy  = 1.5,
-    aHUS         = 1.5,
-    TIKD         = 2.0,
-    HeredAmyloid = 2.0,
-    C3G          = 2.0
+    PKD1          = 2.0,
+    PKD2          = 2.0,
+    ARPKD         = 1.5,
+    Alport_XL     = 2.0,
+    Alport_AR     = 2.0,
+    NPHS1         = 2.0,
+    NPHS2         = 2.0,
+    INF2          = 2.0,
+    Tubulopathy   = 1.5,
+    CFH_aHUS      = 1.5,
+    CD46_MCP      = 1.5,
+    CFI_aHUS      = 1.5,
+    C3_CFB        = 1.5,
+    TIKD          = 2.0,
+    TTR_Amyloid   = 2.0,
+    APOA1_Amyloid = 2.0,
+    GSN_Amyloid   = 2.0,
+    C3G           = 2.0
   ),
   "None" = list(
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   )
 )
 
@@ -684,16 +1034,24 @@ family_history_modifiers <- list(
 # -----------------------------------------------------------------------------
 consanguinity_modifiers <- list(
   "Yes" = list(
-    ADPKD        = 1.0,
-    ARPKD        = 6.0,
-    Alport_XL    = 1.0,   # consanguinity doesn't boost XL (hemizygous, not biallelic)
-    Alport_AR    = 8.0,   # strongly favours biallelic COL4A3/4
-    FSGS         = 5.0,
-    Tubulopathy  = 5.0,
-    aHUS         = 3.0,
-    TIKD         = 2.0,
-    HeredAmyloid = 1.0,
-    C3G          = 4.0
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 6.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 8.0,
+    NPHS1         = 6.0,   # AR condition
+    NPHS2         = 6.0,   # AR condition
+    INF2          = 1.0,   # AD — consanguinity not informative
+    Tubulopathy   = 5.0,
+    CFH_aHUS      = 2.0,
+    CD46_MCP      = 1.5,
+    CFI_aHUS      = 2.0,
+    C3_CFB        = 2.0,
+    TIKD          = 2.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 4.0
   ),
   "No"      = lapply(condition_priors, function(x) 1.0),
   "Unknown" = lapply(condition_priors, function(x) 1.0)
@@ -703,49 +1061,67 @@ names(consanguinity_modifiers$Unknown) <- names(condition_priors)
 
 # -----------------------------------------------------------------------------
 # 5b. SEX MODIFIER (Alport subtype discrimination)
-#     Applied only to Alport_XL and Alport_AR; all other conditions = 1.0.
-#     Rationale:
-#       Male   — hemizygous males always manifest XL Alport; AR/AD equally affects both sexes
-#       Female — XL female carriers present variably (~50–60% symptomatic);
-#                AR relatively more likely among symptomatic females
-#       Unknown — no update
 # -----------------------------------------------------------------------------
 sex_alport_modifiers <- list(
   "Male" = list(
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.8,   # hemizygous males: full disease expression in all carriers
-    Alport_AR    = 0.6,   # AR less likely in males relative to XL
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.8,
+    Alport_AR     = 0.6,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
   "Female" = list(
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 0.6,   # XL females: ~50–60% symptomatic carriers — less likely to be the diagnosis
-    Alport_AR    = 1.8,   # AR/AD relatively more likely in symptomatic females
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 0.6,
+    Alport_AR     = 1.8,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   ),
   "Unknown" = list(
-    ADPKD        = 1.0,
-    ARPKD        = 1.0,
-    Alport_XL    = 1.0,
-    Alport_AR    = 1.0,
-    FSGS         = 1.0,
-    Tubulopathy  = 1.0,
-    aHUS         = 1.0,
-    TIKD         = 1.0,
-    HeredAmyloid = 1.0,
-    C3G          = 1.0
+    PKD1          = 1.0,
+    PKD2          = 1.0,
+    ARPKD         = 1.0,
+    Alport_XL     = 1.0,
+    Alport_AR     = 1.0,
+    NPHS1         = 1.0,
+    NPHS2         = 1.0,
+    INF2          = 1.0,
+    Tubulopathy   = 1.0,
+    CFH_aHUS      = 1.0,
+    CD46_MCP      = 1.0,
+    CFI_aHUS      = 1.0,
+    C3_CFB        = 1.0,
+    TIKD          = 1.0,
+    TTR_Amyloid   = 1.0,
+    APOA1_Amyloid = 1.0,
+    GSN_Amyloid   = 1.0,
+    C3G           = 1.0
   )
 )
 
@@ -753,38 +1129,78 @@ sex_alport_modifiers <- list(
 # 6. AGE MODIFIERS
 # -----------------------------------------------------------------------------
 age_modifier <- function(age_years) {
-  mods <- c(ADPKD=1.0, ARPKD=1.0, Alport_XL=1.0, Alport_AR=1.0, FSGS=1.0,
-            Tubulopathy=1.0, aHUS=1.0, TIKD=1.0, HeredAmyloid=1.0, C3G=1.0)
+  mods <- c(
+    PKD1=1.0, PKD2=1.0, ARPKD=1.0,
+    Alport_XL=1.0, Alport_AR=1.0,
+    NPHS1=1.0, NPHS2=1.0, INF2=1.0,
+    Tubulopathy=1.0,
+    CFH_aHUS=1.0, CD46_MCP=1.0, CFI_aHUS=1.0, C3_CFB=1.0,
+    TIKD=1.0,
+    TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0,
+    C3G=1.0
+  )
   if (is.na(age_years) || is.null(age_years)) return(mods)
 
   if (age_years < 1) {
     mods["ARPKD"]     <- 15.0
-    mods["FSGS"]      <- 3.0
+    mods["NPHS1"]     <- 20.0   # congenital nephrotic syndrome presents at birth
+    mods["NPHS2"]     <- 3.0
+    mods["INF2"]      <- 0.2
     mods["C3G"]       <- 2.0
   } else if (age_years < 18) {
-    mods["ARPKD"]        <- 8.0
-    mods["Alport_XL"]    <- 2.5  # XL Alport males commonly present in teens with haematuria→proteinuria
-    mods["Alport_AR"]    <- 2.0  # AR Alport also presents in childhood
-    mods["FSGS"]         <- 3.0
-    mods["Tubulopathy"]  <- 2.0
-    mods["C3G"]          <- 3.0
-    mods["HeredAmyloid"] <- 0.3
+    mods["ARPKD"]         <- 8.0
+    mods["Alport_XL"]     <- 2.5
+    mods["Alport_AR"]     <- 2.0
+    mods["NPHS1"]         <- 5.0
+    mods["NPHS2"]         <- 6.0   # childhood SRNS; peak 3–8 years
+    mods["INF2"]          <- 0.5
+    mods["Tubulopathy"]   <- 2.0
+    mods["CD46_MCP"]      <- 3.0   # MCP/CD46 aHUS predominantly paediatric
+    mods["CFH_aHUS"]      <- 2.0
+    mods["CFI_aHUS"]      <- 1.5
+    mods["C3_CFB"]        <- 1.5
+    mods["C3G"]           <- 3.0
+    mods["TTR_Amyloid"]   <- 0.3
+    mods["APOA1_Amyloid"] <- 0.3
+    mods["GSN_Amyloid"]   <- 0.3
+    mods["PKD1"]          <- 2.0   # PKD1 can manifest in childhood; PKD2 rarely symptomatic
+    mods["PKD2"]          <- 0.5
   } else if (age_years < 30) {
-    mods["Alport_XL"]    <- 2.5  # XL males: ESKD median age 25–30
-    mods["Alport_AR"]    <- 2.0
-    mods["FSGS"]         <- 3.0
-    mods["Tubulopathy"]  <- 1.5
-    mods["C3G"]          <- 2.0
-    mods["HeredAmyloid"] <- 0.5
+    mods["Alport_XL"]     <- 2.5
+    mods["Alport_AR"]     <- 2.0
+    mods["NPHS1"]         <- 1.0
+    mods["NPHS2"]         <- 3.0
+    mods["INF2"]          <- 2.0
+    mods["Tubulopathy"]   <- 1.5
+    mods["CD46_MCP"]      <- 2.0
+    mods["CFH_aHUS"]      <- 1.5
+    mods["C3G"]           <- 2.0
+    mods["TTR_Amyloid"]   <- 0.5
+    mods["APOA1_Amyloid"] <- 0.5
+    mods["GSN_Amyloid"]   <- 0.5
+    mods["PKD1"]          <- 2.5   # young ADPKD presentation strongly suggests PKD1
+    mods["PKD2"]          <- 0.8
   } else if (age_years < 50) {
-    mods["ADPKD"]        <- 2.0
-    mods["Alport_XL"]    <- 1.5  # late-presenting / female carrier Alport
-    mods["Alport_AR"]    <- 1.5
-    mods["TIKD"]         <- 2.0
+    mods["PKD1"]          <- 3.0   # peak PKD1 progression and diagnosis decade
+    mods["PKD2"]          <- 1.0
+    mods["Alport_XL"]     <- 1.5
+    mods["Alport_AR"]     <- 1.5
+    mods["NPHS1"]         <- 0.5
+    mods["NPHS2"]         <- 1.5
+    mods["INF2"]          <- 3.0   # INF2 most commonly presents 20–50
+    mods["TIKD"]          <- 2.0
+    mods["TTR_Amyloid"]   <- 1.5
+    mods["APOA1_Amyloid"] <- 1.5
   } else {
-    mods["ADPKD"]        <- 4.0
-    mods["TIKD"]         <- 3.0
-    mods["HeredAmyloid"] <- 4.0
+    mods["PKD1"]          <- 2.0
+    mods["PKD2"]          <- 4.0   # PKD2 ESKD at ~75; over-50 presentation strongly favours PKD2
+    mods["TIKD"]          <- 3.0
+    mods["NPHS1"]         <- 0.2
+    mods["NPHS2"]         <- 0.5
+    mods["INF2"]          <- 2.0
+    mods["TTR_Amyloid"]   <- 5.0
+    mods["APOA1_Amyloid"] <- 4.0
+    mods["GSN_Amyloid"]   <- 4.0
   }
   return(mods)
 }
@@ -793,47 +1209,63 @@ age_modifier <- function(age_years) {
 # 7. PANEL–CONDITION MAPPING
 # -----------------------------------------------------------------------------
 panel_condition_map <- list(
-  R193 = c("ADPKD", "ARPKD"),
+  R193 = c("PKD1", "PKD2", "ARPKD"),
   R194 = c("Alport_XL", "Alport_AR"),
-  R195 = "FSGS",
+  R195 = c("NPHS1", "NPHS2", "INF2"),
   R196 = "C3G",
   R197 = "C3G",
   R198 = "Tubulopathy",
-  R201 = "aHUS",
+  R201 = c("CFH_aHUS", "CD46_MCP", "CFI_aHUS", "C3_CFB"),
   R202 = "TIKD",
-  R204 = "HeredAmyloid",
+  R204 = c("TTR_Amyloid", "APOA1_Amyloid", "GSN_Amyloid"),
   R256 = "Tubulopathy",
-  R257 = c("Alport_XL", "Alport_AR", "ADPKD", "FSGS"),
-  R446 = "FSGS"
+  R257 = c("Alport_XL", "Alport_AR", "PKD1", "PKD2", "NPHS1", "NPHS2", "INF2"),
+  R446 = c("NPHS1", "NPHS2", "INF2")
 )
 
 # -----------------------------------------------------------------------------
 # 8. DISPLAY LABELS AND COLOUR PALETTE
 # -----------------------------------------------------------------------------
 condition_labels <- c(
-  ADPKD        = "ADPKD (PKD1/PKD2)",
-  ARPKD        = "ARPKD (PKHD1)",
-  Alport_XL    = "Alport — X-linked (COL4A5)",
-  Alport_AR    = "Alport — AR/AD (COL4A3/4)",
-  FSGS         = "Genetic FSGS / SRNS",
-  Tubulopathy  = "Inherited Tubulopathy",
-  aHUS         = "Atypical HUS (complement)",
-  TIKD         = "Tubulointerstitial Kidney Disease",
-  HeredAmyloid = "Hereditary Systemic Amyloidosis",
-  C3G          = "C3 Glomerulopathy / MPGN"
+  PKD1          = "ADPKD — PKD1",
+  PKD2          = "ADPKD — PKD2",
+  ARPKD         = "ARPKD (PKHD1)",
+  Alport_XL     = "Alport — X-linked (COL4A5)",
+  Alport_AR     = "Alport — AR/AD (COL4A3/4)",
+  NPHS1         = "FSGS/SRNS — NPHS1 (nephrin)",
+  NPHS2         = "FSGS/SRNS — NPHS2 (podocin)",
+  INF2          = "FSGS/SRNS — INF2",
+  Tubulopathy   = "Inherited Tubulopathy",
+  CFH_aHUS      = "aHUS — CFH",
+  CD46_MCP      = "aHUS — CD46/MCP",
+  CFI_aHUS      = "aHUS — CFI",
+  C3_CFB        = "aHUS — C3 / CFB",
+  TIKD          = "Tubulointerstitial Kidney Disease",
+  TTR_Amyloid   = "Amyloidosis — TTR",
+  APOA1_Amyloid = "Amyloidosis — APOA1",
+  GSN_Amyloid   = "Amyloidosis — Gelsolin (GSN)",
+  C3G           = "C3 Glomerulopathy / MPGN"
 )
 
 condition_colours <- c(
-  ADPKD        = "#2E86AB",
-  ARPKD        = "#A23B72",
-  Alport_XL    = "#F18F01",  # warm orange — X-linked
-  Alport_AR    = "#B85C00",  # darker burnt orange — AR/AD
-  FSGS         = "#C73E1D",
-  Tubulopathy  = "#44BBA4",
-  aHUS         = "#7B2D8B",
-  TIKD         = "#1D7A4E",
-  HeredAmyloid = "#E07B39",
-  C3G          = "#5C6BC0"
+  PKD1          = "#2E86AB",   # blue family for ADPKD
+  PKD2          = "#5BB5D5",
+  ARPKD         = "#A23B72",
+  Alport_XL     = "#F18F01",   # orange family for Alport
+  Alport_AR     = "#B85C00",
+  NPHS1         = "#8B1A00",   # red family for FSGS/SRNS
+  NPHS2         = "#C73E1D",
+  INF2          = "#E05A3A",
+  Tubulopathy   = "#44BBA4",
+  CFH_aHUS      = "#7B2D8B",   # purple family for aHUS
+  CD46_MCP      = "#A855B5",
+  CFI_aHUS      = "#5A1068",
+  C3_CFB        = "#C084D4",
+  TIKD          = "#1D7A4E",
+  TTR_Amyloid   = "#E07B39",   # amber family for amyloidosis
+  APOA1_Amyloid = "#C4622A",
+  GSN_Amyloid   = "#F4A261",
+  C3G           = "#5C6BC0"
 )
 
 # -----------------------------------------------------------------------------
@@ -846,9 +1278,14 @@ lr_sources <- list(
     "Savige J et al. Alport syndrome. KI 2022;101:717-729",
     "Vivante A, Hildebrandt F. Exploring the genetic basis of CKD. Nat Rev Nephrol 2016;12:133-146",
     "Noris M, Remuzzi G. Atypical HUS. NEJM 2009;361:1676-1687",
+    "Fremeaux-Bacchi V et al. Genetics and outcome of atypical HUS. CJASN 2013;8:554-562",
     "Cornec-Le Gall E et al. ADPKD. Lancet 2019;393:919-935",
+    "Grantham JJ et al. PKD1 vs PKD2: volume, function, symptoms. JASN 2006;17:2429-2436",
+    "Hinkes BG et al. Nephrotic syndrome in the first year of life. Nat Genet 2007;39:1018-1024",
+    "Boyer O et al. INF2 mutations in Charcot-Marie-Tooth disease with glomerulopathy. NEJM 2011;365:2377-2388",
     "Eckardt KU et al. Autosomal dominant tubulointerstitial kidney disease. Nat Rev Nephrol 2015;11:617-625",
     "Wechalekar AD et al. Systemic amyloidosis. Lancet 2016;387:2641-2654",
+    "Benson MD et al. Amyloid nomenclature 2020. Amyloid 2020;27:217-222",
     "Nester CM et al. C3 glomerulopathy. Nephrol Dial Transplant 2018;33:i1-i7"
   ),
   caveat = "Likelihood ratios are expert approximations informed by published literature. They have not been formally validated in a prospective clinical cohort. Posterior probabilities should be interpreted as decision-support estimates only."
