@@ -28,17 +28,19 @@ Sys.setenv(ANTHROPIC_API_KEY = "sk-ant-...")
 ### Run the app
 
 ```r
-shiny::runApp("path/to/Genetics_app")
+shiny::runApp("path/to/RenalGenetics-Decision-Support")
 ```
 
 Or open `app.R` in RStudio and click **Run App**.
+
+A hosted version is available at: **https://toates19.shinyapps.io/RenalGenetics/**
 
 ---
 
 ## File structure
 
 ```
-Genetics_app/
+RenalGenetics-Decision-Support/
 ├── app.R                    # Main Shiny app (ui + server)
 ├── data/
 │   ├── panels.R             # NHS GT Directory panel definitions (R193–R446)
@@ -166,19 +168,30 @@ Gene lists sourced from PanelApp Genomics England; only green-rated (GEL_Status 
 
 ---
 
-## Bayesian model — conditions modelled (9)
+## Bayesian model — conditions modelled (18)
 
-| Condition | Key genes |
-|-----------|-----------|
-| ADPKD | PKD1, PKD2 |
-| ARPKD | PKHD1 |
-| Alport syndrome | COL4A3, COL4A4, COL4A5 |
-| Genetic FSGS / SRNS | NPHS1, NPHS2, INF2 |
-| Inherited tubulopathy | SLC12A3, CLCNKB, UMOD |
-| Atypical HUS | CFH, CFI, C3, CD46 |
-| Tubulointerstitial kidney disease | UMOD, MUC1, REN |
-| Hereditary amyloidosis | TTR, APOA1, GSN |
-| C3 glomerulopathy / MPGN | CFH, C3, CFHR5 |
+Each condition is modelled as a separate entity with its own prior, likelihood ratios, and modifiers. Gene-level splits allow the model to discriminate between subtypes that differ in age of onset, sex effect, and family history pattern.
+
+| Condition | Key gene(s) | Notes |
+|-----------|-------------|-------|
+| ADPKD — PKD1 | *PKD1* | ~78% of ADPKD; earlier onset, more severe |
+| ADPKD — PKD2 | *PKD2* | ~18% of ADPKD; later onset, milder course |
+| ARPKD | *PKHD1* | Recessive; typically presents in childhood |
+| Alport syndrome — X-linked | *COL4A5* | ~85% of Alport; X-linked, affects males most severely |
+| Alport syndrome — AR/AD | *COL4A3/COL4A4* | ~15% of Alport; autosomal recessive or dominant |
+| FSGS/SRNS — NPHS1 | *NPHS1* | Congenital nephrotic syndrome (nephrin) |
+| FSGS/SRNS — NPHS2 | *NPHS2* | Childhood SRNS (podocin) |
+| FSGS/SRNS — INF2 | *INF2* | AD FSGS; often with Charcot-Marie-Tooth |
+| Inherited tubulopathy | *SLC12A3, CLCNKB, UMOD* | Bartter, Gitelman, RTA, Fanconi etc. |
+| aHUS — CFH | *CFH* | ~30% of genetic aHUS |
+| aHUS — CD46/MCP | *CD46* | ~15% of genetic aHUS; predominantly paediatric |
+| aHUS — CFI | *CFI* | ~8% of genetic aHUS |
+| aHUS — C3/CFB | *C3, CFB* | ~10% of genetic aHUS |
+| Tubulointerstitial kidney disease | *UMOD, MUC1, REN* | ADTKD; often with hyperuricaemia/gout |
+| Hereditary amyloidosis — TTR | *TTR* | ~90% of hereditary systemic amyloidosis |
+| Hereditary amyloidosis — APOA1 | *APOA1* | Renal and hepatic amyloid |
+| Hereditary amyloidosis — GSN | *GSN* | Gelsolin amyloidosis (Finnish-type) |
+| C3 glomerulopathy / MPGN | *CFH, C3, CFHR5* | Includes CFHR5 nephropathy (Cypriot ancestry) |
 
 CAKUT is intentionally excluded from the Bayesian model. There is no dedicated NHS GT Directory CAKUT panel; genes implicated in CAKUT (PAX2, HNF1B, EYA1, SALL1, RET etc.) are covered by the R257 super-panel. Structural anomaly HPO terms (hydronephrosis, renal dysplasia, horseshoe kidney, VUR) therefore feed R257 eligibility scoring rather than a separate Bayesian condition.
 

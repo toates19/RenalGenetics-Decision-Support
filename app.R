@@ -100,11 +100,6 @@ ui <- page_fillable(
     style = "background:#1a6fa8; padding:8px 20px;",
     tags$span(
       style = "color:#fff; font-size:1.15rem; font-weight:700; letter-spacing:.02em;",
-      tags$img(
-        src    = "nhs_logo.png",
-        height = "24px",
-        style  = "margin-right:10px; vertical-align:middle;"
-      ),
       "RenalGenetics Decision Support"
     ),
     tags$span(
@@ -188,6 +183,10 @@ ui <- page_fillable(
           placeholder = "e.g. 32-year-old man with microscopic haematuria, sensorineural hearing loss and family history of renal failure…",
           rows        = 4,
           style       = "font-size:.85rem;"
+        ),
+        tags$p(
+          style = "font-size:.78rem; color:#856404; background:#fff3cd; border:1px solid #ffc107; border-radius:4px; padding:6px 8px; margin-top:6px; margin-bottom:4px;",
+          "⚠️ Do not enter real patient identifiers — vignette text is sent to an external AI API (Anthropic) for HPO extraction."
         ),
         actionButton("extract_hpo", "Extract HPO Terms",
                      class = "btn btn-outline-primary btn-sm w-100 mt-2",
