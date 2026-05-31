@@ -2,7 +2,7 @@
 # data/bayes_params.R
 # Bayesian parameters for renal genetic diagnosis probability estimation
 #
-# Conditions modelled (18 total):
+# Conditions modelled (19 total):
 #   PKD1          — ADPKD due to PKD1
 #   PKD2          — ADPKD due to PKD2
 #   ARPKD         — Autosomal recessive PKD (PKHD1)
@@ -21,6 +21,7 @@
 #   APOA1_Amyloid — Hereditary APOA1 amyloidosis
 #   GSN_Amyloid   — Hereditary gelsolin (GSN) amyloidosis
 #   C3G           — C3 glomerulopathy / MPGN
+#   NoGenetic     — No monogenic diagnosis from modelled conditions
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -44,7 +45,9 @@ condition_priors <- c(
   TTR_Amyloid   = 1 / 110000,   # ~90% of hereditary systemic amyloidosis
   APOA1_Amyloid = 1 / 2000000,  # ~5% of hereditary systemic amyloidosis
   GSN_Amyloid   = 1 / 5000000,  # ~2% of hereditary systemic amyloidosis
-  C3G           = 1 / 1000000
+  C3G           = 1 / 1000000,
+  NoGenetic     = 1 / 134       # ~85% prior at baseline; calibrated to nephrology referral
+                                 # population considering genetic testing (Groopman NEJM 2019)
 )
 
 # -----------------------------------------------------------------------------
@@ -74,7 +77,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.05   # bilateral cysts in nephrology → almost always genetic
   ),
 
   "HP:0005584" = list(  # Renal cyst (unilateral/unspecified)
@@ -97,7 +101,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.3    # unilateral/unspecified cysts less specific
   ),
 
   "HP:0000790" = list(  # Haematuria
@@ -120,7 +125,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.5,
     GSN_Amyloid   = 1.0,
-    C3G           = 12.0
+    C3G           = 12.0,
+    NoGenetic     = 0.65   # haematuria has many non-genetic causes
   ),
 
   "HP:0000407" = list(  # Sensorineural hearing loss
@@ -143,7 +149,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 3.0,   # cranial nerve (CN VIII) involvement in gelsolin amyloidosis
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.12   # hearing loss in nephrology → almost always Alport
   ),
 
   "HP:0000093" = list(  # Proteinuria (sub-nephrotic)
@@ -166,7 +173,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 8.0,
     APOA1_Amyloid = 12.0,
     GSN_Amyloid   = 5.0,
-    C3G           = 10.0
+    C3G           = 10.0,
+    NoGenetic     = 0.85   # sub-nephrotic proteinuria very non-specific
   ),
 
   "HP:0000100" = list(  # Nephrotic syndrome
@@ -189,7 +197,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 6.0,
     APOA1_Amyloid = 10.0,
     GSN_Amyloid   = 4.0,
-    C3G           = 8.0
+    C3G           = 8.0,
+    NoGenetic     = 0.55   # nephrotic syndrome: MCD/membranous are common non-genetic causes
   ),
 
   "HP:0001407" = list(  # Hepatic cysts
@@ -212,7 +221,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.08   # hepatic + renal cysts → PKD virtually certain
   ),
 
   "HP:0001395" = list(  # Hepatic fibrosis
@@ -235,7 +245,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.05   # congenital hepatic fibrosis almost pathognomonic for ARPKD
   ),
 
   "HP:0002616" = list(  # Aortic root / intracranial aneurysm
@@ -258,7 +269,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.3    # intracranial aneurysm much more common in PKD1
   ),
 
   "HP:0000126" = list(  # Hydronephrosis
@@ -281,7 +293,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.7    # hydronephrosis often obstructive/non-genetic
   ),
 
   "HP:0000110" = list(  # Renal dysplasia
@@ -304,7 +317,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.55   # renal dysplasia often genetic but not always modelled conditions
   ),
 
   "HP:0000085" = list(  # Horseshoe kidney
@@ -327,7 +341,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.85   # horseshoe kidney rarely attributable to modelled conditions
   ),
 
   "HP:0000076" = list(  # Vesicoureteral reflux
@@ -350,7 +365,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.9    # VUR very non-specific for modelled conditions
   ),
 
   "HP:0002150" = list(  # Hypercalciuria
@@ -373,7 +389,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.45   # idiopathic hypercalciuria common but tubulopathy specific in context
   ),
 
   "HP:0002900" = list(  # Hypokalaemia
@@ -396,7 +413,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.55   # hypokalaemia: many non-genetic causes but informative in clinic
   ),
 
   "HP:0002148" = list(  # Hypophosphataemia
@@ -419,7 +437,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.45   # hypophosphataemia → proximal RTA / Fanconi fairly specific
   ),
 
   "HP:0000121" = list(  # Nephrocalcinosis
@@ -442,7 +461,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.3    # nephrocalcinosis → metabolic tubulopathy likely in nephrology
   ),
 
   "HP:0000787" = list(  # Nephrolithiasis
@@ -465,7 +485,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.85   # calcium oxalate stones mostly non-genetic
   ),
 
   "HP:0001919" = list(  # Acute kidney injury
@@ -488,7 +509,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 3.0,
     APOA1_Amyloid = 3.0,
     GSN_Amyloid   = 2.0,
-    C3G           = 6.0
+    C3G           = 6.0,
+    NoGenetic     = 0.8    # AKI very non-specific; most is non-genetic
   ),
 
   "HP:0001873" = list(  # Thrombocytopenia
@@ -511,7 +533,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 2.0
+    C3G           = 2.0,
+    NoGenetic     = 0.3    # thrombocytopenia in nephrology = TMA → aHUS (genetic or TTP)
   ),
 
   "HP:0001903" = list(  # Anaemia (haemolytic / microangiopathic)
@@ -534,7 +557,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 2.0,
     APOA1_Amyloid = 2.0,
     GSN_Amyloid   = 1.5,
-    C3G           = 3.0
+    C3G           = 3.0,
+    NoGenetic     = 0.75   # anaemia non-specific; common in CKD of any cause
   ),
 
   "HP:0005575" = list(  # Haemolytic uraemic syndrome
@@ -557,7 +581,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 3.0
+    C3G           = 3.0,
+    NoGenetic     = 0.12   # HUS/TMA in nephrology → complement-mediated aHUS
   ),
 
   "HP:0000504" = list(  # Ocular abnormality
@@ -580,7 +605,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 5.0,   # lattice corneal dystrophy pathognomonic for gelsolin amyloidosis
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.1    # anterior lenticonus / lattice corneal dystrophy → genetic
   ),
 
   "HP:0012622" = list(  # Chronic kidney disease
@@ -603,7 +629,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 5.0,
     APOA1_Amyloid = 5.0,
     GSN_Amyloid   = 4.0,
-    C3G           = 5.0
+    C3G           = 5.0,
+    NoGenetic     = 0.9    # CKD extremely non-specific
   ),
 
   "HP:0003774" = list(  # End-stage kidney disease
@@ -626,7 +653,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 4.0,
     APOA1_Amyloid = 4.0,
     GSN_Amyloid   = 3.0,
-    C3G           = 5.0
+    C3G           = 5.0,
+    NoGenetic     = 0.65   # ESKD raises genetic probability; age captured separately
   ),
 
   "HP:0000822" = list(  # Hypertension early onset
@@ -649,7 +677,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 2.0
+    C3G           = 2.0,
+    NoGenetic     = 0.8    # early HTN also common in non-genetic essential hypertension
   ),
 
   "HP:0000969" = list(  # Oedema
@@ -672,7 +701,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 3.0,
     APOA1_Amyloid = 3.0,
     GSN_Amyloid   = 2.0,
-    C3G           = 5.0
+    C3G           = 5.0,
+    NoGenetic     = 0.8    # oedema non-specific
   ),
 
   "HP:0001942" = list(  # Metabolic alkalosis
@@ -695,7 +725,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.4    # metabolic alkalosis without cause → Bartter/Gitelman fairly specific
   ),
 
   "HP:0001997" = list(  # Gout / hyperuricaemia
@@ -718,7 +749,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.6    # gout: TIKD is genetic cause but gout very common non-genetically
   ),
 
   "HP:0001638" = list(  # Cardiomyopathy
@@ -741,7 +773,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 25.0,  # restrictive cardiomyopathy cardinal in TTR amyloidosis
     APOA1_Amyloid = 5.0,
     GSN_Amyloid   = 3.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.12   # restrictive cardiomyopathy → amyloidosis, likely genetic
   ),
 
   "HP:0001271" = list(  # Peripheral neuropathy
@@ -764,7 +797,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 18.0,
     APOA1_Amyloid = 8.0,
     GSN_Amyloid   = 12.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.18   # peripheral neuropathy + renal → amyloidosis or INF2/CMT
   ),
 
   "HP:0003159" = list(  # Hyperoxaluria
@@ -787,7 +821,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.15   # primary hyperoxaluria is genetic; almost always genetic in nephrology
   ),
 
   "HP:0010934" = list(  # Hyperuricosuria
@@ -810,7 +845,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.45   # hyperuricosuria: TIKD/tubulopathy specific in context
   ),
 
   # ── HPO terms generated by structured inputs ─────────────────────────────────
@@ -835,7 +871,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.75   # type 4 RTA common in diabetic/obstructive CKD
   ),
 
   "HP:0002917" = list(  # Hypomagnesaemia
@@ -858,7 +895,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.25   # isolated hypomagnesaemia → Gitelman/Bartter fairly specific
   ),
 
   "HP:0000863" = list(  # Nephrogenic diabetes insipidus
@@ -881,7 +919,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.2    # nephrogenic DI in nephrology → genetic tubulopathy likely
   ),
 
   "HP:0001878" = list(  # Haemolytic anaemia (microangiopathic)
@@ -904,7 +943,8 @@ hpo_lr_positive <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 3.0
+    C3G           = 3.0,
+    NoGenetic     = 0.18   # Coombs-negative MAHA → TMA → aHUS; strongly genetic in context
   )
 
 )
@@ -913,14 +953,14 @@ hpo_lr_positive <- list(
 # 3. NEGATIVE LIKELIHOOD RATIOS for KEY terms (when absent)
 # -----------------------------------------------------------------------------
 hpo_lr_negative <- list(
-  "HP:0000113" = c(PKD1=0.05, PKD2=0.05, ARPKD=0.08, Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=1.0, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=0.9,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=1.0),
-  "HP:0000790" = c(PKD1=0.6,  PKD2=0.7,  ARPKD=0.9,  Alport_XL=0.15, Alport_AR=0.25, NPHS1=0.8, NPHS2=0.7, INF2=0.8, Tubulopathy=1.0, CFH_aHUS=0.7,  CD46_MCP=0.7,  CFI_aHUS=0.7,  C3_CFB=0.7,  TIKD=0.8,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.5),
-  "HP:0000407" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=0.35, Alport_AR=0.45, NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=0.9, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=1.0,  TTR_Amyloid=0.9, APOA1_Amyloid=1.0, GSN_Amyloid=0.7, C3G=1.0),
-  "HP:0000093" = c(PKD1=0.7,  PKD2=0.8,  ARPKD=0.8,  Alport_XL=0.6,  Alport_AR=0.6,  NPHS1=0.2, NPHS2=0.3, INF2=0.4, Tubulopathy=0.8, CFH_aHUS=0.6,  CD46_MCP=0.6,  CFI_aHUS=0.6,  C3_CFB=0.6,  TIKD=0.7,  TTR_Amyloid=0.5, APOA1_Amyloid=0.3, GSN_Amyloid=0.6, C3G=0.4),
-  "HP:0000100" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=0.8,  Alport_AR=0.8,  NPHS1=0.1, NPHS2=0.2, INF2=0.4, Tubulopathy=1.0, CFH_aHUS=0.8,  CD46_MCP=0.8,  CFI_aHUS=0.8,  C3_CFB=0.8,  TIKD=1.0,  TTR_Amyloid=0.7, APOA1_Amyloid=0.5, GSN_Amyloid=0.8, C3G=0.7),
-  "HP:0001873" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=1.0, CFH_aHUS=0.3,  CD46_MCP=0.3,  CFI_aHUS=0.3,  C3_CFB=0.3,  TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.8),
-  "HP:0005575" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=1.0, CFH_aHUS=0.15, CD46_MCP=0.15, CFI_aHUS=0.15, C3_CFB=0.15, TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.7),
-  "HP:0002150" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=0.4, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=1.0)
+  "HP:0000113" = c(PKD1=0.05, PKD2=0.05, ARPKD=0.08, Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=1.0, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=0.9,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=1.0,  NoGenetic=1.10),
+  "HP:0000790" = c(PKD1=0.6,  PKD2=0.7,  ARPKD=0.9,  Alport_XL=0.15, Alport_AR=0.25, NPHS1=0.8, NPHS2=0.7, INF2=0.8, Tubulopathy=1.0, CFH_aHUS=0.7,  CD46_MCP=0.7,  CFI_aHUS=0.7,  C3_CFB=0.7,  TIKD=0.8,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.5,  NoGenetic=1.05),
+  "HP:0000407" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=0.35, Alport_AR=0.45, NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=0.9, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=1.0,  TTR_Amyloid=0.9, APOA1_Amyloid=1.0, GSN_Amyloid=0.7, C3G=1.0,  NoGenetic=1.08),
+  "HP:0000093" = c(PKD1=0.7,  PKD2=0.8,  ARPKD=0.8,  Alport_XL=0.6,  Alport_AR=0.6,  NPHS1=0.2, NPHS2=0.3, INF2=0.4, Tubulopathy=0.8, CFH_aHUS=0.6,  CD46_MCP=0.6,  CFI_aHUS=0.6,  C3_CFB=0.6,  TIKD=0.7,  TTR_Amyloid=0.5, APOA1_Amyloid=0.3, GSN_Amyloid=0.6, C3G=0.4,  NoGenetic=1.03),
+  "HP:0000100" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=0.8,  Alport_AR=0.8,  NPHS1=0.1, NPHS2=0.2, INF2=0.4, Tubulopathy=1.0, CFH_aHUS=0.8,  CD46_MCP=0.8,  CFI_aHUS=0.8,  C3_CFB=0.8,  TIKD=1.0,  TTR_Amyloid=0.7, APOA1_Amyloid=0.5, GSN_Amyloid=0.8, C3G=0.7,  NoGenetic=1.05),
+  "HP:0001873" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=1.0, CFH_aHUS=0.3,  CD46_MCP=0.3,  CFI_aHUS=0.3,  C3_CFB=0.3,  TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.8,  NoGenetic=1.10),
+  "HP:0005575" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=1.0, CFH_aHUS=0.15, CD46_MCP=0.15, CFI_aHUS=0.15, C3_CFB=0.15, TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.7,  NoGenetic=1.12),
+  "HP:0002150" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Tubulopathy=0.4, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=1.0,  NoGenetic=1.05)
 )
 
 # -----------------------------------------------------------------------------
@@ -945,7 +985,8 @@ family_history_modifiers <- list(
     TTR_Amyloid   = 10.0,
     APOA1_Amyloid = 8.0,
     GSN_Amyloid   = 8.0,
-    C3G           = 4.0
+    C3G           = 4.0,
+    NoGenetic     = 0.12   # dominant family history very strongly implies genetic cause
   ),
   "Autosomal recessive" = list(
     PKD1          = 1.0,
@@ -965,7 +1006,8 @@ family_history_modifiers <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 5.0
+    C3G           = 5.0,
+    NoGenetic     = 0.08   # clear recessive pattern almost excludes non-genetic cause
   ),
   "X-linked" = list(
     PKD1          = 1.0,
@@ -985,7 +1027,8 @@ family_history_modifiers <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 0.08   # X-linked inheritance pattern is highly specific for genetic disease
   ),
   "Unknown" = list(
     PKD1          = 2.0,
@@ -1005,7 +1048,8 @@ family_history_modifiers <- list(
     TTR_Amyloid   = 2.0,
     APOA1_Amyloid = 2.0,
     GSN_Amyloid   = 2.0,
-    C3G           = 2.0
+    C3G           = 2.0,
+    NoGenetic     = 0.60   # family history present but pattern unknown → lowers NoGenetic
   ),
   "None" = list(
     PKD1          = 1.0,
@@ -1025,7 +1069,8 @@ family_history_modifiers <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 1.0    # no family history → neutral for NoGenetic
   )
 )
 
@@ -1051,7 +1096,8 @@ consanguinity_modifiers <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 4.0
+    C3G           = 4.0,
+    NoGenetic     = 0.20   # consanguinity strongly raises AR probability
   ),
   "No"      = lapply(condition_priors, function(x) 1.0),
   "Unknown" = lapply(condition_priors, function(x) 1.0)
@@ -1081,7 +1127,8 @@ sex_alport_modifiers <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 1.0
   ),
   "Female" = list(
     PKD1          = 1.0,
@@ -1101,7 +1148,8 @@ sex_alport_modifiers <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 1.0
   ),
   "Unknown" = list(
     PKD1          = 1.0,
@@ -1121,7 +1169,8 @@ sex_alport_modifiers <- list(
     TTR_Amyloid   = 1.0,
     APOA1_Amyloid = 1.0,
     GSN_Amyloid   = 1.0,
-    C3G           = 1.0
+    C3G           = 1.0,
+    NoGenetic     = 1.0
   )
 )
 
@@ -1136,17 +1185,19 @@ age_modifier <- function(age_years) {
     Tubulopathy=1.0,
     CFH_aHUS=1.0, CD46_MCP=1.0, CFI_aHUS=1.0, C3_CFB=1.0,
     TIKD=1.0,
+    NoGenetic=1.0,
     TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0,
     C3G=1.0
   )
   if (is.na(age_years) || is.null(age_years)) return(mods)
 
   if (age_years < 1) {
-    mods["ARPKD"]     <- 15.0
-    mods["NPHS1"]     <- 20.0   # congenital nephrotic syndrome presents at birth
-    mods["NPHS2"]     <- 3.0
-    mods["INF2"]      <- 0.2
-    mods["C3G"]       <- 2.0
+    mods["ARPKD"]        <- 15.0
+    mods["NPHS1"]        <- 20.0   # congenital nephrotic syndrome presents at birth
+    mods["NPHS2"]        <- 3.0
+    mods["INF2"]         <- 0.2
+    mods["C3G"]          <- 2.0
+    mods["NoGenetic"]    <- 0.10   # neonatal kidney disease almost exclusively genetic
   } else if (age_years < 18) {
     mods["ARPKD"]         <- 8.0
     mods["Alport_XL"]     <- 2.5
@@ -1165,6 +1216,7 @@ age_modifier <- function(age_years) {
     mods["GSN_Amyloid"]   <- 0.3
     mods["PKD1"]          <- 2.0   # PKD1 can manifest in childhood; PKD2 rarely symptomatic
     mods["PKD2"]          <- 0.5
+    mods["NoGenetic"]     <- 0.30  # paediatric nephrology → genetic cause very likely
   } else if (age_years < 30) {
     mods["Alport_XL"]     <- 2.5
     mods["Alport_AR"]     <- 2.0
@@ -1180,6 +1232,7 @@ age_modifier <- function(age_years) {
     mods["GSN_Amyloid"]   <- 0.5
     mods["PKD1"]          <- 2.5   # young ADPKD presentation strongly suggests PKD1
     mods["PKD2"]          <- 0.8
+    mods["NoGenetic"]     <- 0.65  # young adult → still pre-selected for genetic
   } else if (age_years < 50) {
     mods["PKD1"]          <- 3.0   # peak PKD1 progression and diagnosis decade
     mods["PKD2"]          <- 1.0
@@ -1191,6 +1244,7 @@ age_modifier <- function(age_years) {
     mods["TIKD"]          <- 2.0
     mods["TTR_Amyloid"]   <- 1.5
     mods["APOA1_Amyloid"] <- 1.5
+    # NoGenetic stays at 1.0 — neutral for peak genetic diagnosis decade
   } else {
     mods["PKD1"]          <- 2.0
     mods["PKD2"]          <- 4.0   # PKD2 ESKD at ~75; over-50 presentation strongly favours PKD2
@@ -1201,6 +1255,7 @@ age_modifier <- function(age_years) {
     mods["TTR_Amyloid"]   <- 5.0
     mods["APOA1_Amyloid"] <- 4.0
     mods["GSN_Amyloid"]   <- 4.0
+    mods["NoGenetic"]     <- 1.60  # over 50 → acquired CKD much more common
   }
   return(mods)
 }
@@ -1244,7 +1299,8 @@ condition_labels <- c(
   TTR_Amyloid   = "Amyloidosis — TTR",
   APOA1_Amyloid = "Amyloidosis — APOA1",
   GSN_Amyloid   = "Amyloidosis — Gelsolin (GSN)",
-  C3G           = "C3 Glomerulopathy / MPGN"
+  C3G           = "C3 Glomerulopathy / MPGN",
+  NoGenetic     = "No genetic diagnosis (modelled conditions)"
 )
 
 condition_colours <- c(
@@ -1265,7 +1321,8 @@ condition_colours <- c(
   TTR_Amyloid   = "#E07B39",   # amber family for amyloidosis
   APOA1_Amyloid = "#C4622A",
   GSN_Amyloid   = "#F4A261",
-  C3G           = "#5C6BC0"
+  C3G           = "#5C6BC0",
+  NoGenetic     = "#9E9E9E"    # neutral grey
 )
 
 # -----------------------------------------------------------------------------

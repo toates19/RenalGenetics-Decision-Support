@@ -128,7 +128,8 @@ ui <- page_fillable(
         fluidRow(
           column(6, selectInput("family_history", "Family history",
                                 choices = c("None", "Autosomal dominant",
-                                            "Autosomal recessive", "X-linked", "Unknown"))),
+                                            "Autosomal recessive", "X-linked",
+                                            "Present but pattern unknown" = "Unknown"))),
           column(6, selectInput("consanguinity", "Consanguinity",
                                 choices = c("Unknown", "Yes", "No")))
         ),
