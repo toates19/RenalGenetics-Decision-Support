@@ -124,8 +124,8 @@ hpo_lr_positive <- list(
   "HP:0000790" = list(  # Haematuria
     label         = "Haematuria (microscopic or macroscopic)",
     key           = TRUE,
-    PKD1          = 8.0,
-    PKD2          = 6.0,   # haematuria less common in milder PKD2
+    PKD1          = 3.5,   # haematuria in PKD is secondary to cysts; without cysts it is non-informative
+    PKD2          = 2.5,   # PKD2 even milder
     ARPKD         = 2.0,
     Alport_XL     = 25.0,
     Alport_AR     = 20.0,
@@ -1109,7 +1109,7 @@ hpo_lr_positive <- list(
 # 3. NEGATIVE LIKELIHOOD RATIOS for KEY terms (when absent)
 # -----------------------------------------------------------------------------
 hpo_lr_negative <- list(
-  "HP:0000113" = c(PKD1=0.05, PKD2=0.05, ARPKD=0.08, Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=0.9,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=1.0,  NoGenetic=1.10),
+  "HP:0000113" = c(PKD1=0.015, PKD2=0.015, ARPKD=0.03, Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=0.9,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=1.0,  NoGenetic=1.10),
   "HP:0000790" = c(PKD1=0.6,  PKD2=0.7,  ARPKD=0.9,  Alport_XL=0.15, Alport_AR=0.25, NPHS1=0.8, NPHS2=0.7, INF2=0.8, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=0.7,  CD46_MCP=0.7,  CFI_aHUS=0.7,  C3_CFB=0.7,  TIKD=0.8,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.5,  NoGenetic=1.05),
   "HP:0000407" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=0.35, Alport_AR=0.45, NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.0, Bartter=1.0, Distal_RTA=0.8, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=1.0,  TTR_Amyloid=0.9, APOA1_Amyloid=1.0, GSN_Amyloid=0.7, C3G=1.0,  NoGenetic=1.08),
   "HP:0000093" = c(PKD1=0.7,  PKD2=0.8,  ARPKD=0.8,  Alport_XL=0.6,  Alport_AR=0.6,  NPHS1=0.2, NPHS2=0.3, INF2=0.4, Gitelman=0.8, Bartter=0.8, Distal_RTA=0.7, PrimaryHyperoxaluria=0.7, NephrogenicDI=0.9, CFH_aHUS=0.6,  CD46_MCP=0.6,  CFI_aHUS=0.6,  C3_CFB=0.6,  TIKD=0.7,  TTR_Amyloid=0.5, APOA1_Amyloid=0.3, GSN_Amyloid=0.6, C3G=0.4,  NoGenetic=1.03),
