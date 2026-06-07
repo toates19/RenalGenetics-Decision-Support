@@ -1,5 +1,6 @@
 .Renviron
 .claude/
+.claude/settings.local.json
 .DS_Store
 RenalGenetics_BayesianModel.pages
 RenalGenetics_HowToGuide.png
