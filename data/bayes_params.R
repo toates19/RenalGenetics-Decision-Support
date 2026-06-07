@@ -2,12 +2,13 @@
 # data/bayes_params.R
 # Bayesian parameters for renal genetic diagnosis probability estimation
 #
-# Conditions modelled (23 total):
+# Conditions modelled (24 total):
 #   PKD1          — ADPKD due to PKD1
 #   PKD2          — ADPKD due to PKD2
 #   ARPKD         — Autosomal recessive PKD (PKHD1)
 #   Alport_XL     — X-linked Alport syndrome (COL4A5)
-#   Alport_AR     — AR/AD Alport syndrome (COL4A3/COL4A4)
+#   Alport_AR     — AR/AD Alport syndrome (COL4A3/COL4A4) biallelic
+#   COL4_het      — COL4 heterozygote (heterozygous COL4A3/COL4A4)
 #   NPHS1         — FSGS/SRNS due to NPHS1 (nephrin) — congenital nephrotic
 #   NPHS2         — FSGS/SRNS due to NPHS2 (podocin) — childhood SRNS
 #   INF2          — FSGS/SRNS due to INF2 — AD, often with CMT
@@ -36,7 +37,8 @@ condition_priors <- c(
   PKD2          = 1 / 5500,     # ~18% of ADPKD cases; later / milder
   ARPKD         = 1 / 20000,
   Alport_XL     = 1 / 6000,     # ~85% of Alport are X-linked (COL4A5)
-  Alport_AR     = 1 / 33000,    # ~15% AR/AD (COL4A3/COL4A4)
+  Alport_AR     = 1 / 33000,    # biallelic COL4A3/COL4A4 (severe AR/digenic)
+  COL4_het      = 1 / 106,      # heterozygous COL4A3/COL4A4; Gibson et al. JASN 2021
   NPHS1         = 1 / 200000,   # congenital nephrotic syndrome; rare in general nephrology
   NPHS2         = 1 / 25000,    # most common monogenic childhood FSGS/SRNS
   INF2          = 1 / 67000,    # AD FSGS; often with Charcot-Marie-Tooth
@@ -73,6 +75,7 @@ hpo_lr_positive <- list(
     ARPKD         = 80,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -101,6 +104,7 @@ hpo_lr_positive <- list(
     ARPKD         = 15,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -129,6 +133,7 @@ hpo_lr_positive <- list(
     ARPKD         = 2.0,
     Alport_XL     = 25.0,
     Alport_AR     = 20.0,
+    COL4_het      = 20.0,  # cardinal feature; most COL4 het carriers presenting to nephrology have haematuria
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -157,6 +162,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 20.0,
     Alport_AR     = 15.0,
+    COL4_het      = 0.4,   # occurs uncommonly if at all in COL4 hets (Savige 2022)
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -185,6 +191,7 @@ hpo_lr_positive <- list(
     ARPKD         = 3.0,
     Alport_XL     = 6.0,
     Alport_AR     = 6.0,
+    COL4_het      = 3.0,   # minority of carriers develop proteinuria as disease progresses
     NPHS1         = 40.0,  # always massive proteinuria (congenital nephrotic)
     NPHS2         = 35.0,
     INF2          = 25.0,
@@ -213,6 +220,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 3.0,
     Alport_AR     = 3.0,
+    COL4_het      = 1.0,
     NPHS1         = 60.0,  # defining feature of congenital nephrotic syndrome
     NPHS2         = 40.0,
     INF2          = 25.0,
@@ -241,6 +249,7 @@ hpo_lr_positive <- list(
     ARPKD         = 25.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -269,6 +278,7 @@ hpo_lr_positive <- list(
     ARPKD         = 30.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -297,6 +307,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -325,6 +336,7 @@ hpo_lr_positive <- list(
     ARPKD         = 3.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -353,6 +365,7 @@ hpo_lr_positive <- list(
     ARPKD         = 2.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -381,6 +394,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -409,6 +423,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.5,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -437,6 +452,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -465,6 +481,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -493,6 +510,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -521,6 +539,7 @@ hpo_lr_positive <- list(
     ARPKD         = 2.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -549,6 +568,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -577,6 +597,7 @@ hpo_lr_positive <- list(
     ARPKD         = 2.0,
     Alport_XL     = 3.0,
     Alport_AR     = 3.0,
+    COL4_het      = 1.5,
     NPHS1         = 3.0,
     NPHS2         = 3.0,
     INF2          = 3.0,
@@ -605,6 +626,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -633,6 +655,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.5,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -661,6 +684,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -689,6 +713,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 22.0,
     Alport_AR     = 6.0,
+    COL4_het      = 0.4,   # occurs uncommonly if at all in COL4 hets (Savige 2022)
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -717,6 +742,7 @@ hpo_lr_positive <- list(
     ARPKD         = 4.0,
     Alport_XL     = 8.0,
     Alport_AR     = 7.0,
+    COL4_het      = 3.0,   # minority of carriers develop CKD
     NPHS1         = 7.0,
     NPHS2         = 7.0,
     INF2          = 6.0,
@@ -745,6 +771,7 @@ hpo_lr_positive <- list(
     ARPKD         = 5.0,
     Alport_XL     = 10.0,
     Alport_AR     = 9.0,
+    COL4_het      = 2.0,   # ~3% reach ESKD by age 60 (Savige 2022) — low but non-zero
     NPHS1         = 8.0,
     NPHS2         = 8.0,
     INF2          = 7.0,
@@ -773,6 +800,7 @@ hpo_lr_positive <- list(
     ARPKD         = 3.0,
     Alport_XL     = 2.0,
     Alport_AR     = 2.0,
+    COL4_het      = 1.5,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -801,6 +829,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.5,
     Alport_AR     = 1.5,
+    COL4_het      = 1.0,
     NPHS1         = 15.0,  # universal in congenital nephrotic syndrome
     NPHS2         = 12.0,
     INF2          = 8.0,
@@ -829,6 +858,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -857,6 +887,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -885,6 +916,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -913,6 +945,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 8.0,   # INF2 is associated with Charcot-Marie-Tooth (~70% of INF2 FSGS cases)
@@ -941,6 +974,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -969,6 +1003,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -999,6 +1034,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -1027,6 +1063,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -1055,6 +1092,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -1083,6 +1121,7 @@ hpo_lr_positive <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -1109,14 +1148,14 @@ hpo_lr_positive <- list(
 # 3. NEGATIVE LIKELIHOOD RATIOS for KEY terms (when absent)
 # -----------------------------------------------------------------------------
 hpo_lr_negative <- list(
-  "HP:0000113" = c(PKD1=0.015, PKD2=0.015, ARPKD=0.03, Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=0.9,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=1.0,  NoGenetic=1.10),
-  "HP:0000790" = c(PKD1=0.6,  PKD2=0.7,  ARPKD=0.9,  Alport_XL=0.15, Alport_AR=0.25, NPHS1=0.8, NPHS2=0.7, INF2=0.8, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=0.7,  CD46_MCP=0.7,  CFI_aHUS=0.7,  C3_CFB=0.7,  TIKD=0.8,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.5,  NoGenetic=1.05),
-  "HP:0000407" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=0.35, Alport_AR=0.45, NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.0, Bartter=1.0, Distal_RTA=0.8, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=1.0,  TTR_Amyloid=0.9, APOA1_Amyloid=1.0, GSN_Amyloid=0.7, C3G=1.0,  NoGenetic=1.08),
-  "HP:0000093" = c(PKD1=0.7,  PKD2=0.8,  ARPKD=0.8,  Alport_XL=0.6,  Alport_AR=0.6,  NPHS1=0.2, NPHS2=0.3, INF2=0.4, Gitelman=0.8, Bartter=0.8, Distal_RTA=0.7, PrimaryHyperoxaluria=0.7, NephrogenicDI=0.9, CFH_aHUS=0.6,  CD46_MCP=0.6,  CFI_aHUS=0.6,  C3_CFB=0.6,  TIKD=0.7,  TTR_Amyloid=0.5, APOA1_Amyloid=0.3, GSN_Amyloid=0.6, C3G=0.4,  NoGenetic=1.03),
-  "HP:0000100" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=0.8,  Alport_AR=0.8,  NPHS1=0.1, NPHS2=0.2, INF2=0.4, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=0.8,  CD46_MCP=0.8,  CFI_aHUS=0.8,  C3_CFB=0.8,  TIKD=1.0,  TTR_Amyloid=0.7, APOA1_Amyloid=0.5, GSN_Amyloid=0.8, C3G=0.7,  NoGenetic=1.05),
-  "HP:0001873" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=0.3,  CD46_MCP=0.3,  CFI_aHUS=0.3,  C3_CFB=0.3,  TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.8,  NoGenetic=1.10),
-  "HP:0005575" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=0.15, CD46_MCP=0.15, CFI_aHUS=0.15, C3_CFB=0.15, TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.7,  NoGenetic=1.12),
-  "HP:0002150" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.1, Bartter=0.2, Distal_RTA=0.3, PrimaryHyperoxaluria=0.7, NephrogenicDI=0.7, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=1.0,  NoGenetic=1.05)
+  "HP:0000113" = c(PKD1=0.015, PKD2=0.015, ARPKD=0.03, Alport_XL=1.0,  Alport_AR=1.0,  COL4_het=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=0.9,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=1.0,  NoGenetic=1.10),
+  "HP:0000790" = c(PKD1=0.6,  PKD2=0.7,  ARPKD=0.9,  Alport_XL=0.15, Alport_AR=0.25, COL4_het=0.2,  NPHS1=0.8, NPHS2=0.7, INF2=0.8, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=0.7,  CD46_MCP=0.7,  CFI_aHUS=0.7,  C3_CFB=0.7,  TIKD=0.8,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.5,  NoGenetic=1.05),
+  "HP:0000407" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=0.35, Alport_AR=0.45, COL4_het=1.1,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.0, Bartter=1.0, Distal_RTA=0.8, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=1.0,  TTR_Amyloid=0.9, APOA1_Amyloid=1.0, GSN_Amyloid=0.7, C3G=1.0,  NoGenetic=1.08),
+  "HP:0000093" = c(PKD1=0.7,  PKD2=0.8,  ARPKD=0.8,  Alport_XL=0.6,  Alport_AR=0.6,  COL4_het=0.8,  NPHS1=0.2, NPHS2=0.3, INF2=0.4, Gitelman=0.8, Bartter=0.8, Distal_RTA=0.7, PrimaryHyperoxaluria=0.7, NephrogenicDI=0.9, CFH_aHUS=0.6,  CD46_MCP=0.6,  CFI_aHUS=0.6,  C3_CFB=0.6,  TIKD=0.7,  TTR_Amyloid=0.5, APOA1_Amyloid=0.3, GSN_Amyloid=0.6, C3G=0.4,  NoGenetic=1.03),
+  "HP:0000100" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=0.8,  Alport_AR=0.8,  COL4_het=1.0,  NPHS1=0.1, NPHS2=0.2, INF2=0.4, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=0.8,  CD46_MCP=0.8,  CFI_aHUS=0.8,  C3_CFB=0.8,  TIKD=1.0,  TTR_Amyloid=0.7, APOA1_Amyloid=0.5, GSN_Amyloid=0.8, C3G=0.7,  NoGenetic=1.05),
+  "HP:0001873" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  COL4_het=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=0.3,  CD46_MCP=0.3,  CFI_aHUS=0.3,  C3_CFB=0.3,  TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.8,  NoGenetic=1.10),
+  "HP:0005575" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  COL4_het=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0, CFH_aHUS=0.15, CD46_MCP=0.15, CFI_aHUS=0.15, C3_CFB=0.15, TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=0.7,  NoGenetic=1.12),
+  "HP:0002150" = c(PKD1=1.0,  PKD2=1.0,  ARPKD=1.0,  Alport_XL=1.0,  Alport_AR=1.0,  COL4_het=1.0,  NPHS1=1.0, NPHS2=1.0, INF2=1.0, Gitelman=1.1, Bartter=0.2, Distal_RTA=0.3, PrimaryHyperoxaluria=0.7, NephrogenicDI=0.7, CFH_aHUS=1.0,  CD46_MCP=1.0,  CFI_aHUS=1.0,  C3_CFB=1.0,  TIKD=1.0,  TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0, C3G=1.0,  NoGenetic=1.05)
 )
 
 # -----------------------------------------------------------------------------
@@ -1129,6 +1168,7 @@ family_history_modifiers <- list(
     ARPKD         = 1.0,
     Alport_XL     = 3.0,
     Alport_AR     = 4.0,
+    COL4_het      = 8.0,   # fits AD inheritance pattern
     NPHS1         = 1.5,   # NPHS1 is AR; AD FH makes it less likely
     NPHS2         = 1.5,   # NPHS2 is AR; AD FH makes it less likely
     INF2          = 8.0,   # INF2 is classically AD
@@ -1154,6 +1194,7 @@ family_history_modifiers <- list(
     ARPKD         = 8.0,
     Alport_XL     = 1.0,
     Alport_AR     = 10.0,
+    COL4_het      = 0.5,   # AR pattern suggests biallelic → Alport_AR more likely than het
     NPHS1         = 8.0,   # NPHS1 is AR
     NPHS2         = 8.0,   # NPHS2 is AR
     INF2          = 1.0,
@@ -1179,6 +1220,7 @@ family_history_modifiers <- list(
     ARPKD         = 1.0,
     Alport_XL     = 15.0,
     Alport_AR     = 1.0,
+    COL4_het      = 0.3,   # X-linked pattern points away from autosomal COL4A3/4
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -1204,6 +1246,7 @@ family_history_modifiers <- list(
     ARPKD         = 1.5,
     Alport_XL     = 2.0,
     Alport_AR     = 2.0,
+    COL4_het      = 2.0,
     NPHS1         = 2.0,
     NPHS2         = 2.0,
     INF2          = 2.0,
@@ -1229,6 +1272,7 @@ family_history_modifiers <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,   # de novo variants occur — no family history is neutral
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -1260,6 +1304,7 @@ consanguinity_modifiers <- list(
     ARPKD         = 6.0,
     Alport_XL     = 1.0,
     Alport_AR     = 8.0,
+    COL4_het      = 0.5,   # consanguinity raises probability of biallelic → Alport_AR more likely
     NPHS1         = 6.0,   # AR condition
     NPHS2         = 6.0,   # AR condition
     INF2          = 1.0,   # AD — consanguinity not informative
@@ -1295,6 +1340,7 @@ sex_alport_modifiers <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.8,
     Alport_AR     = 0.6,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -1320,6 +1366,7 @@ sex_alport_modifiers <- list(
     ARPKD         = 1.0,
     Alport_XL     = 0.6,
     Alport_AR     = 1.8,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -1345,6 +1392,7 @@ sex_alport_modifiers <- list(
     ARPKD         = 1.0,
     Alport_XL     = 1.0,
     Alport_AR     = 1.0,
+    COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
     INF2          = 1.0,
@@ -1372,7 +1420,7 @@ sex_alport_modifiers <- list(
 age_modifier <- function(age_years) {
   mods <- c(
     PKD1=1.0, PKD2=1.0, ARPKD=1.0,
-    Alport_XL=1.0, Alport_AR=1.0,
+    Alport_XL=1.0, Alport_AR=1.0, COL4_het=1.0,
     NPHS1=1.0, NPHS2=1.0, INF2=1.0,
     Gitelman          = 1.0,
     Bartter           = 1.0,
@@ -1396,6 +1444,7 @@ age_modifier <- function(age_years) {
     mods["NPHS2"]        <- 3.0
     mods["INF2"]         <- 0.2
     mods["C3G"]          <- 2.0
+    mods["COL4_het"]     <- 1.0    # haematuria from COL4 hets can present in infancy
     mods["NoGenetic"]    <- 0.10   # neonatal kidney disease almost exclusively genetic
   } else if (age_years < 18) {
     mods["ARPKD"]         <- 8.0
@@ -1419,6 +1468,7 @@ age_modifier <- function(age_years) {
     mods["GSN_Amyloid"]   <- 0.3
     mods["PKD1"]          <- 2.0   # PKD1 can manifest in childhood; PKD2 rarely symptomatic
     mods["PKD2"]          <- 0.5
+    mods["COL4_het"]      <- 2.0   # haematuria from COL4 hets commonly first detected in childhood/adolescence
     mods["NoGenetic"]     <- 0.30  # paediatric nephrology → genetic cause very likely
   } else if (age_years < 30) {
     mods["Alport_XL"]     <- 2.5
@@ -1438,6 +1488,7 @@ age_modifier <- function(age_years) {
     mods["PrimaryHyperoxaluria"] <- 5.0
     mods["NephrogenicDI"] <- 1.5
     mods["PKD2"]          <- 0.8
+    mods["COL4_het"]      <- 1.5
     mods["NoGenetic"]     <- 0.65  # young adult → still pre-selected for genetic
   } else if (age_years < 50) {
     mods["PKD1"]          <- 3.0   # peak PKD1 progression and diagnosis decade
@@ -1451,6 +1502,7 @@ age_modifier <- function(age_years) {
     mods["TTR_Amyloid"]   <- 1.5
     mods["APOA1_Amyloid"] <- 1.5
     mods["Gitelman"]      <- 2.0   # peak presentation decade
+    mods["COL4_het"]      <- 1.5
     # NoGenetic stays at 1.0 — neutral for peak genetic diagnosis decade
   } else {
     mods["PKD1"]          <- 2.0
@@ -1475,7 +1527,7 @@ age_modifier <- function(age_years) {
 # -----------------------------------------------------------------------------
 panel_condition_map <- list(
   R193 = c("PKD1", "PKD2", "ARPKD"),
-  R194 = c("Alport_XL", "Alport_AR"),
+  R194 = c("Alport_XL", "Alport_AR", "COL4_het"),
   R195 = c("NPHS1", "NPHS2", "INF2"),
   R196 = "C3G",
   R197 = "C3G",
@@ -1496,7 +1548,8 @@ condition_labels <- c(
   PKD2          = "ADPKD — PKD2",
   ARPKD         = "ARPKD (PKHD1)",
   Alport_XL     = "Alport — X-linked (COL4A5)",
-  Alport_AR     = "Alport — AR/AD (COL4A3/4)",
+  Alport_AR     = "Alport — biallelic (COL4A3/4)",
+  COL4_het      = "COL4 heterozygote (COL4A3/COL4A4)",
   NPHS1         = "FSGS/SRNS — NPHS1 (nephrin)",
   NPHS2         = "FSGS/SRNS — NPHS2 (podocin)",
   INF2          = "FSGS/SRNS — INF2",
@@ -1521,8 +1574,9 @@ condition_colours <- c(
   PKD1          = "#2E86AB",   # blue family for ADPKD
   PKD2          = "#5BB5D5",
   ARPKD         = "#A23B72",
-  Alport_XL     = "#F18F01",   # orange family for Alport
+  Alport_XL     = "#F18F01",   # orange family for Alport / COL4
   Alport_AR     = "#B85C00",
+  COL4_het      = "#E8C84A",   # amber/gold — distinct from biallelic Alport, reflects milder phenotype
   NPHS1         = "#8B1A00",   # red family for FSGS/SRNS
   NPHS2         = "#C73E1D",
   INF2          = "#E05A3A",
