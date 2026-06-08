@@ -45,7 +45,8 @@ RenalGenetics-Decision-Support/
 ├── data/
 │   ├── panels.R             # NHS GT Directory panel definitions (R193–R446)
 │   ├── bayes_params.R       # Prior probabilities, likelihood ratios, modifiers
-│   └── strict_criteria.R    # NHS eligibility criteria (Layer 1 strict gate)
+│   ├── strict_criteria.R    # NHS eligibility criteria (Layer 1 strict gate)
+│   └── variant_interp.R     # Variant interpretation module — 38 condition groups
 ├── R/
 │   ├── hpo_extract.R        # Anthropic API call — HPO term extraction
 │   ├── eligibility.R        # Two-layer eligibility scoring logic
@@ -168,7 +169,7 @@ Gene lists sourced from PanelApp Genomics England; only green-rated (GEL_Status 
 
 ---
 
-## Bayesian model — conditions modelled (18)
+## Bayesian model — conditions modelled (24)
 
 Each condition is modelled as a separate entity with its own prior, likelihood ratios, and modifiers. Gene-level splits allow the model to discriminate between subtypes that differ in age of onset, sex effect, and family history pattern.
 
@@ -177,25 +178,89 @@ Each condition is modelled as a separate entity with its own prior, likelihood r
 | ADPKD — PKD1 | *PKD1* | ~78% of ADPKD; earlier onset, more severe |
 | ADPKD — PKD2 | *PKD2* | ~18% of ADPKD; later onset, milder course |
 | ARPKD | *PKHD1* | Recessive; typically presents in childhood |
-| Alport syndrome — X-linked | *COL4A5* | ~85% of Alport; X-linked, affects males most severely |
-| Alport syndrome — AR/AD | *COL4A3/COL4A4* | ~15% of Alport; autosomal recessive or dominant |
+| Alport — X-linked | *COL4A5* | ~85% of Alport; X-linked, affects males most severely |
+| Alport — biallelic | *COL4A3/COL4A4* | ~15% of Alport; autosomal recessive or dominant |
+| COL4 heterozygote | *COL4A3/COL4A4* | Thin basement membrane nephropathy / carrier state; prior 1/106 |
 | FSGS/SRNS — NPHS1 | *NPHS1* | Congenital nephrotic syndrome (nephrin) |
 | FSGS/SRNS — NPHS2 | *NPHS2* | Childhood SRNS (podocin) |
 | FSGS/SRNS — INF2 | *INF2* | AD FSGS; often with Charcot-Marie-Tooth |
-| Inherited tubulopathy | *SLC12A3, CLCNKB, UMOD* | Bartter, Gitelman, RTA, Fanconi etc. |
+| Gitelman syndrome | *SLC12A3* | Most common hereditary tubulopathy |
+| Bartter syndrome | *CLCNKB, SLC12A1, KCNJ1* | Includes pseudohypoaldosteronism (bundled) |
+| Distal RTA | *ATP6V1B1, ATP6V0A4, SLC4A1* | Autosomal recessive and dominant forms |
+| Primary hyperoxaluria | *AGXT, GRHPR, HOGA1* | Types 1–3; nephrocalcinosis / nephrolithiasis |
+| Congenital nephrogenic DI | *AVPR2, AQP2* | X-linked (AVPR2) and AR (AQP2) |
 | aHUS — CFH | *CFH* | ~30% of genetic aHUS |
 | aHUS — CD46/MCP | *CD46* | ~15% of genetic aHUS; predominantly paediatric |
 | aHUS — CFI | *CFI* | ~8% of genetic aHUS |
 | aHUS — C3/CFB | *C3, CFB* | ~10% of genetic aHUS |
 | Tubulointerstitial kidney disease | *UMOD, MUC1, REN* | ADTKD; often with hyperuricaemia/gout |
-| Hereditary amyloidosis — TTR | *TTR* | ~90% of hereditary systemic amyloidosis |
-| Hereditary amyloidosis — APOA1 | *APOA1* | Renal and hepatic amyloid |
-| Hereditary amyloidosis — GSN | *GSN* | Gelsolin amyloidosis (Finnish-type) |
+| Amyloidosis — TTR | *TTR* | ~90% of hereditary systemic amyloidosis |
+| Amyloidosis — APOA1 | *APOA1* | Renal and hepatic amyloid |
+| Amyloidosis — Gelsolin | *GSN* | Finnish-type; corneal lattice dystrophy |
 | C3 glomerulopathy / MPGN | *CFH, C3, CFHR5* | Includes CFHR5 nephropathy (Cypriot ancestry) |
+| No genetic diagnosis | — | Calibration condition (~85% prior at baseline) |
 
 CAKUT is intentionally excluded from the Bayesian model. There is no dedicated NHS GT Directory CAKUT panel; genes implicated in CAKUT (PAX2, HNF1B, EYA1, SALL1, RET etc.) are covered by the R257 super-panel. Structural anomaly HPO terms (hydronephrosis, renal dysplasia, horseshoe kidney, VUR) therefore feed R257 eligibility scoring rather than a separate Bayesian condition.
 
 Posterior probabilities are updated from population priors using likelihood ratios for confirmed HPO terms, plus modifiers for family history pattern, consanguinity, and age at presentation.
+
+---
+
+## Variant interpretation module
+
+`data/variant_interp.R` provides the data layer for a second Bayesian module that addresses a different question: **given that a P/LP variant has been identified in a gene, how likely is it to be causative for this patient's phenotype?**
+
+This is distinct from the eligibility/diagnostic probability model above, which asks whether a patient is likely to have an inherited renal condition at all.
+
+The module covers **38 condition groups** spanning the full breadth of inherited renal disease (not limited to the 12 NHS GT Directory panels):
+
+| Group | Key genes |
+|-------|-----------|
+| ADPKD | *PKD1, PKD2, GANAB, DNAJB11* + others |
+| ARPKD | *PKHD1* |
+| Nephronophthisis | *NPHP1, NPHP3, NPHP4, CEP290* + others |
+| Bardet-Biedl syndrome | *BBS1, BBS2, BBS4* + others |
+| Joubert syndrome | *AHI1, CEP290, INPP5E* + others |
+| Alport — X-linked | *COL4A5* |
+| Alport — biallelic | *COL4A3, COL4A4* |
+| COL4 heterozygote | *COL4A3, COL4A4* |
+| COL4A1 disease | *COL4A1* |
+| Congenital nephrotic syndrome (AR) | *NPHS1, NPHS2, LAMB2, CD2AP* + others |
+| WT1-related disease | *WT1* |
+| AD FSGS | *ACTN4, TRPC6, INF2, MYO1E* + others |
+| Nucleoporin SRNS | *NUP107, NUP133, NUP85, NUP93* + others |
+| Tubulointerstitial kidney disease | *UMOD, MUC1, REN, SEC61A1* |
+| Gitelman syndrome | *SLC12A3, CLDN16, CLDN19* + others |
+| Bartter syndrome | *CLCNKB, BSND, SLC12A1, KCNJ1* + others |
+| Distal RTA | *ATP6V0A4, ATP6V1B1, SLC4A1, CA2* |
+| Primary hyperoxaluria | *AGXT, GRHPR, HOGA1* + others |
+| Dent disease | *CLCN5, OCRL* |
+| Nephrogenic DI | *AVPR2, AQP2* |
+| aHUS | *CFH, CFI, C3, CFB, CD46, DGKE* + others |
+| C3 glomerulopathy | *CFHR5, CFH, CFI, C3* + others |
+| Amyloidosis | *TTR, APOA1, GSN, LYZ, FGA* + others |
+| Tuberous sclerosis | *TSC1, TSC2* |
+| Fabry disease | *GLA* |
+| Cystinosis | *CTNS* |
+| HNF1B disease | *HNF1B* |
+| PAX2-related disease | *PAX2* |
+| Branchio-oto-renal syndrome | *EYA1* |
+| CAKUT (other) | *SALL1, RET, GATA3, FRAS1* + others |
+| Alström syndrome | *ALMS1* |
+| Nail-patella syndrome | *LMX1B* |
+| VHL disease | *VHL* |
+| Birt-Hogg-Dubé | *FLCN* |
+| Renal tubular dysgenesis | *ACE, AGT, AGTR1* |
+| Lesch-Nyhan disease | *HPRT1, MOCOS* |
+| Renal hypouricaemia | *SLC22A12, SLC2A9* |
+| Cystinuria | *SLC3A1, SLC7A9* |
+
+Each group defines:
+- **Prior probability** that a P/LP-classified variant is causative given zygosity (baking in lab classification accuracy, penetrance, and baseline phenotype-gene concordance)
+- **Phenotypic feature likelihood ratios** (`lr_present` / `lr_absent`) for discriminating features
+- **Clinical flags** marking parameters that require expert review before the module goes live
+
+The UI layer for this module is in development.
 
 ---
 
@@ -217,7 +282,7 @@ Open `data/panels.R`. Each panel is an entry in the `renal_panels` named list:
 Open `data/bayes_params.R`:
 
 - **Priors** (`condition_priors`): Population prevalence estimates.
-- **Likelihood ratios** (`hpo_lr_positive`): Each HPO entry needs a value for all 10 conditions. Set `key = TRUE` for terms where absence is also informative.
+- **Likelihood ratios** (`hpo_lr_positive`): Each HPO entry needs a value for all modelled conditions. Set `key = TRUE` for terms where absence is also informative.
 - **Negative LRs** (`hpo_lr_negative`): Only required for `key = TRUE` terms.
 - **Modifiers** (`family_history_modifiers`, `consanguinity_modifiers`, `age_modifier`): Multipliers applied before HPO updating.
 
