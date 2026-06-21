@@ -277,7 +277,7 @@ server <- function(input, output, session) {
         selectInput("haematuria", "Haematuria type",
                     choices = c("Microscopic", "Macroscopic"), selected = "Microscopic"),
         checkboxGroupInput("biopsy_haem", "Biopsy findings (if done)", inline = FALSE,
-          choices  = c("Alport syndrome (GBM thickening/splitting)",
+          choices  = c("GBM thickening with splitting/lamellation on EM (Alport pattern)",
                        "Thin basement membrane disease"),
           selected = character(0)
         ),
@@ -503,11 +503,13 @@ server <- function(input, output, session) {
         sex                      = input$sex,
         family_history           = input$family_history,
         consanguinity            = input$consanguinity,
+        biopsy_results           = biopsy_val,
         condition_priors         = condition_priors,
         hpo_lr_positive          = hpo_lr_positive,
         hpo_lr_negative          = hpo_lr_negative,
         family_history_modifiers = family_history_modifiers,
         consanguinity_modifiers  = consanguinity_modifiers,
+        biopsy_modifiers         = biopsy_modifiers,
         sex_alport_modifiers     = sex_alport_modifiers,
         age_modifier_fn          = age_modifier
       )

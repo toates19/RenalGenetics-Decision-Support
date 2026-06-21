@@ -202,7 +202,7 @@ Each condition is modelled as a separate entity with its own prior, likelihood r
 
 CAKUT is intentionally excluded from the Bayesian model. There is no dedicated NHS GT Directory CAKUT panel; genes implicated in CAKUT (PAX2, HNF1B, EYA1, SALL1, RET etc.) are covered by the R257 super-panel. Structural anomaly HPO terms (hydronephrosis, renal dysplasia, horseshoe kidney, VUR) therefore feed R257 eligibility scoring rather than a separate Bayesian condition.
 
-Posterior probabilities are updated from population priors using likelihood ratios for confirmed HPO terms, plus modifiers for family history pattern, consanguinity, and age at presentation.
+Posterior probabilities are updated from population priors using likelihood ratios for confirmed HPO terms, plus modifiers for family history pattern, consanguinity, age at presentation, sex (Alport XL vs AR discrimination), and biopsy findings (GBM splitting/lamellation, thin basement membrane, FSGS, C3G/MPGN, tubulointerstitial pattern).
 
 ---
 

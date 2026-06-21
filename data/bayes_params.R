@@ -1415,7 +1415,83 @@ sex_alport_modifiers <- list(
 )
 
 # -----------------------------------------------------------------------------
-# 6. AGE MODIFIERS
+# 6. BIOPSY MODIFIERS
+# Each entry is a named list of LR multipliers applied when the finding is
+# present in biopsy_results. Findings absent from biopsy_results are ignored
+# (not treated as negative evidence — EM may not have been done).
+# -----------------------------------------------------------------------------
+biopsy_modifiers <- list(
+
+  "GBM thickening with splitting/lamellation on EM (Alport pattern)" = list(
+    PKD1=1.0, PKD2=1.0, ARPKD=1.0,
+    Alport_XL=15.0,  # lamellation is cardinal for X-linked Alport in affected males and severe females
+    Alport_AR=10.0,  # biallelic disease shows the same EM pattern
+    COL4_het=2.0,    # minority of heterozygotes develop GBM changes with age/progression
+    NPHS1=1.0, NPHS2=1.0, INF2=1.0,
+    Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0,
+    CFH_aHUS=1.0, CD46_MCP=1.0, CFI_aHUS=1.0, C3_CFB=1.0,
+    TIKD=1.0,
+    TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0,
+    C3G=1.0,
+    NoGenetic=1.0
+  ),
+
+  "Thin basement membrane disease" = list(
+    PKD1=1.0, PKD2=1.0, ARPKD=1.0,
+    Alport_XL=5.0,   # female COL4A5 carriers and early/juvenile disease often show TBM on EM
+    Alport_AR=4.0,   # early or mild biallelic disease; also carrier parents of AR probands
+    COL4_het=12.0,   # cardinal biopsy finding for heterozygous COL4A3/COL4A4 (Savige 2022)
+    NPHS1=1.0, NPHS2=1.0, INF2=1.0,
+    Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0,
+    CFH_aHUS=1.0, CD46_MCP=1.0, CFI_aHUS=1.0, C3_CFB=1.0,
+    TIKD=1.0,
+    TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0,
+    C3G=1.0,
+    NoGenetic=1.0
+  ),
+
+  "FSGS or diffuse mesangial sclerosis" = list(
+    PKD1=1.0, PKD2=1.0, ARPKD=1.0,
+    Alport_XL=1.0, Alport_AR=1.0, COL4_het=1.0,
+    NPHS1=8.0,   # congenital NS / diffuse mesangial sclerosis; FSGS is a common histological endpoint
+    NPHS2=6.0,   # podocin SRNS typically presents as FSGS
+    INF2=5.0,    # AD FSGS; INF2 variants strongly associated with collapsing or classic FSGS
+    Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0,
+    CFH_aHUS=1.0, CD46_MCP=1.0, CFI_aHUS=1.0, C3_CFB=1.0,
+    TIKD=1.0,
+    TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0,
+    C3G=1.0,
+    NoGenetic=1.0
+  ),
+
+  "C3 glomerulopathy or MPGN" = list(
+    PKD1=1.0, PKD2=1.0, ARPKD=1.0,
+    Alport_XL=1.0, Alport_AR=1.0, COL4_het=1.0,
+    NPHS1=1.0, NPHS2=1.0, INF2=1.0,
+    Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0,
+    CFH_aHUS=1.5,  # some overlap with aHUS complement spectrum
+    CD46_MCP=1.0, CFI_aHUS=1.5, C3_CFB=1.5,
+    TIKD=1.0,
+    TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0,
+    C3G=20.0,    # isolated C3 staining / MPGN pattern is the defining biopsy appearance of C3G
+    NoGenetic=1.0
+  ),
+
+  "Tubulointerstitial kidney disease" = list(
+    PKD1=1.0, PKD2=1.0, ARPKD=1.0,
+    Alport_XL=1.0, Alport_AR=1.0, COL4_het=1.0,
+    NPHS1=1.0, NPHS2=1.0, INF2=1.0,
+    Gitelman=1.0, Bartter=1.0, Distal_RTA=1.0, PrimaryHyperoxaluria=1.0, NephrogenicDI=1.0,
+    CFH_aHUS=1.0, CD46_MCP=1.0, CFI_aHUS=1.0, C3_CFB=1.0,
+    TIKD=15.0,   # tubulointerstitial pattern without significant glomerular lesion is the hallmark of ADTKD
+    TTR_Amyloid=1.0, APOA1_Amyloid=1.0, GSN_Amyloid=1.0,
+    C3G=1.0,
+    NoGenetic=1.0
+  )
+)
+
+# -----------------------------------------------------------------------------
+# 7. AGE MODIFIERS
 # -----------------------------------------------------------------------------
 age_modifier <- function(age_years) {
   mods <- c(
@@ -1523,7 +1599,7 @@ age_modifier <- function(age_years) {
 }
 
 # -----------------------------------------------------------------------------
-# 7. PANEL–CONDITION MAPPING
+# 8. PANEL–CONDITION MAPPING
 # -----------------------------------------------------------------------------
 panel_condition_map <- list(
   R193 = c("PKD1", "PKD2", "ARPKD"),
@@ -1541,7 +1617,7 @@ panel_condition_map <- list(
 )
 
 # -----------------------------------------------------------------------------
-# 8. DISPLAY LABELS AND COLOUR PALETTE
+# 9. DISPLAY LABELS AND COLOUR PALETTE
 # -----------------------------------------------------------------------------
 condition_labels <- c(
   PKD1          = "ADPKD — PKD1",

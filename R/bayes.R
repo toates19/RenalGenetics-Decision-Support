@@ -76,10 +76,12 @@ derive_all_hpo_from_inputs <- function(
 }
 
 run_bayesian_update <- function(confirmed_hpo_ids, age, sex, family_history,
-                                 consanguinity, condition_priors,
+                                 consanguinity, biopsy_results,
+                                 condition_priors,
                                  hpo_lr_positive, hpo_lr_negative,
                                  family_history_modifiers, consanguinity_modifiers,
-                                 sex_alport_modifiers, age_modifier_fn) {
+                                 biopsy_modifiers, sex_alport_modifiers,
+                                 age_modifier_fn) {
 
   conditions <- names(condition_priors)
   posterior  <- setNames(as.numeric(condition_priors), conditions)
@@ -99,6 +101,17 @@ run_bayesian_update <- function(confirmed_hpo_ids, age, sex, family_history,
     for (cond in conditions) {
       m <- cons_mod[[cond]]
       if (!is.null(m)) posterior[cond] <- posterior[cond] * m
+    }
+  }
+
+  # Apply biopsy modifiers
+  for (finding in biopsy_results) {
+    mods <- biopsy_modifiers[[finding]]
+    if (!is.null(mods)) {
+      for (cond in conditions) {
+        m <- mods[[cond]]
+        if (!is.null(m)) posterior[cond] <- posterior[cond] * m
+      }
     }
   }
 

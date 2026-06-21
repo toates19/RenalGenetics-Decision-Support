@@ -9,7 +9,7 @@
 #
 # biopsy_results choices (must match UI exactly):
 #   "FSGS or diffuse mesangial sclerosis"
-#   "Alport syndrome (GBM thickening/splitting)"
+#   "GBM thickening with splitting/lamellation on EM (Alport pattern)"
 #   "Thin basement membrane disease"
 #   "Tubulointerstitial fibrosis (no glomerular lesion)"
 #   "C3 glomerulopathy or MPGN"
@@ -78,9 +78,9 @@ panel_strict_criteria <- list(
         assessable  = TRUE
       ),
       biopsy_evidence = list(
-        description = "Biopsy showing Alport syndrome (GBM thickening/splitting) or thin basement membrane disease",
+        description = "Biopsy showing GBM thickening with splitting/lamellation (Alport pattern) or thin basement membrane disease",
         parameter   = "biopsy_results",
-        value       = c("Alport syndrome (GBM thickening/splitting)", "Thin basement membrane disease"),
+        value       = c("GBM thickening with splitting/lamellation on EM (Alport pattern)", "Thin basement membrane disease"),
         assessable  = TRUE
       ),
       alport_features = list(
