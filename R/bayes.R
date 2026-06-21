@@ -181,11 +181,11 @@ run_bayesian_update <- function(confirmed_hpo_ids, age, sex, family_history,
 build_posterior_plot <- function(posterior_df, condition_labels, condition_colours) {
 
   df <- posterior_df
-  df$label      <- condition_labels[df$condition]
-  df$colour     <- condition_colours[df$condition]
-  df$pct        <- round(df$posterior * 100, 1)
-  df$pct_label  <- paste0(df$pct, "%")
-  df$label      <- factor(df$label, levels = rev(df$label))
+  df$label  <- condition_labels[df$condition]
+  df$colour <- condition_colours[df$condition]
+  df$pct    <- round(df$posterior * 100, 1)
+  df$rank   <- seq_len(nrow(df))
+  df$label  <- factor(df$label, levels = rev(df$label))
 
   plotly::plot_ly(
     data        = df,
@@ -203,23 +203,21 @@ build_posterior_plot <- function(posterior_df, condition_labels, condition_colou
       thickness = 1.5,
       width     = 4
     ),
-    text         = ~pct_label,
-    textposition = "outside",
     hovertemplate = paste0(
       "<b>%{y}</b><br>",
-      "Posterior: %{x:.1f}%<br>",
-      "(error bars = uncertainty range)<br>",
+      "Ranked %{customdata} most likely<br>",
       "<extra></extra>"
-    )
+    ),
+    customdata = ~rank
   ) |>
     plotly::layout(
       xaxis = list(
-        title      = "Posterior Probability (%)",
-        range      = c(0, min(100, max(df$pct) * 1.3 + 5)),
-        ticksuffix = "%"
+        title           = "Relative ranking (bar length only — not a clinical probability)",
+        showticklabels  = FALSE,
+        range           = c(0, min(100, max(df$pct) * 1.35 + 5))
       ),
       yaxis  = list(title = ""),
-      margin = list(l = 10, r = 60, t = 10, b = 40),
+      margin = list(l = 10, r = 20, t = 10, b = 40),
       showlegend    = FALSE,
       paper_bgcolor = "rgba(0,0,0,0)",
       plot_bgcolor  = "rgba(0,0,0,0)"

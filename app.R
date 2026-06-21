@@ -768,9 +768,6 @@ server <- function(input, output, session) {
     df    <- rv$posterior_df
     top   <- df[1, ]
     lbl   <- condition_labels[top$condition]
-    pct   <- round(top$posterior * 100, 1)
-    ci_lo <- round(top$ci_lower  * 100, 1)
-    ci_hi <- round(top$ci_upper  * 100, 1)
 
     n_auto <- rv$n_auto_hpo
     n_ext  <- rv$n_extracted_hpo
@@ -788,16 +785,12 @@ server <- function(input, output, session) {
 
     tags$div(
       class = "summary-box",
-      tags$strong("Highest probability diagnosis: "), lbl, tags$br(),
-      tags$span(style = "font-size:.9rem;",
-                sprintf("Posterior probability: %.1f%% (uncertainty range: %.1f–%.1f%%)",
-                        pct, ci_lo, ci_hi)),
-      tags$br(),
+      tags$strong("Top-ranked condition: "), lbl, tags$br(),
       tags$small(class = "text-muted", note),
       tags$br(),
       tags$small(class = "text-muted",
                  style = "font-style:italic;",
-                 "Probabilities are normalised relative rankings across the conditions modelled — a genetic cause outside this list, or co-existing diagnoses, remain possible.")
+                 "Bar lengths show relative ranking across modelled conditions only — not validated clinical probabilities. A genetic cause outside this list, or co-existing diagnoses, remain possible.")
     )
   })
 
