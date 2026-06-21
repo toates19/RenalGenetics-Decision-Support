@@ -204,6 +204,8 @@ CAKUT is intentionally excluded from the Bayesian model. There is no dedicated N
 
 Posterior probabilities are updated from population priors using likelihood ratios for confirmed HPO terms, plus modifiers for family history pattern, consanguinity, age at presentation, sex (Alport XL vs AR discrimination), and biopsy findings (GBM splitting/lamellation, thin basement membrane, FSGS, C3G/MPGN, tubulointerstitial pattern).
 
+**Display:** The chart shows conditions ranked by relative posterior probability. Numeric percentages are intentionally not displayed — the model outputs are relative rankings within the set of modelled conditions, not validated clinical probabilities, and displaying exact figures risks implying a precision the approximated priors and likelihood ratios cannot support. Bar length conveys relative magnitude; hover shows rank only.
+
 ---
 
 ## Variant interpretation module
