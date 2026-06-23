@@ -13,6 +13,34 @@ source("data/strict_criteria.R")
 source("R/hpo_extract.R")
 source("R/eligibility.R")
 source("R/bayes.R")
+source("data/variant_interp.R")
+
+# ── Variant interpretation posterior computation ───────────────────────────────
+compute_vi_posterior <- function(cond, zygosity, feature_states) {
+  prior <- as.numeric(cond$prior[zygosity])
+  if (is.na(prior)) return(NULL)
+  prior    <- max(0.001, min(0.999, prior))
+  log_odds <- log(prior / (1 - prior))
+  contribs <- list()
+
+  for (feat in cond$features) {
+    state <- feature_states[[feat$id]]
+    if (is.null(state) || state == "Not assessed") next
+    if (state == "Present" && !is.null(feat$lr_present)) {
+      lr       <- feat$lr_present
+      log_odds <- log_odds + log(lr)
+      contribs <- c(contribs, list(list(label = feat$label, state = "Present", lr = lr)))
+    } else if (state == "Absent" && !is.null(feat$lr_absent)) {
+      lr       <- feat$lr_absent
+      log_odds <- log_odds + log(lr)
+      contribs <- c(contribs, list(list(label = feat$label, state = "Absent", lr = lr)))
+    }
+  }
+
+  posterior <- exp(log_odds) / (1 + exp(log_odds))
+  posterior <- max(0.001, min(0.999, posterior))
+  list(prior = prior, posterior = posterior, contributions = contribs)
+}
 
 # ── Theme ─────────────────────────────────────────────────────────────────────
 app_theme <- bs_theme(
@@ -206,19 +234,38 @@ ui <- page_fillable(
       )
     ),
 
-    # ── Right output panel ─────────────────────────────────────────────────────
-    div(
-      style = "overflow-y:auto; height:calc(100vh - 56px); padding:16px;",
-      uiOutput("output_section"),
-      tags$div(
-        class = "disclaimer-footer mt-auto",
-        tags$strong("Disclaimers: "),
-        tags$ul(
-          style = "margin:4px 0 0 0; padding-left:18px;",
-          tags$li("This tool is for decision support only and does not replace clinical judgement or formal genetics referral."),
-          tags$li("Panel criteria based on NHS Rare & Inherited Disease Eligibility Criteria v9 and PanelApp Genomics England."),
-          tags$li("Likelihood ratios are approximations from published literature; posterior probabilities are estimates only."),
-          tags$li("Developed for educational and clinical aid purposes. Not validated for clinical use.")
+    # ── Tabbed output area ─────────────────────────────────────────────────────
+    navset_tab(
+      id = "main_tabs",
+
+      # ── Tab 1: Diagnostic Assessment ───────────────────────────────────────
+      nav_panel(
+        title = "Diagnostic Assessment",
+        icon  = icon("chart-bar"),
+        div(
+          style = "overflow-y:auto; height:calc(100vh - 100px); padding:16px;",
+          uiOutput("output_section"),
+          tags$div(
+            class = "disclaimer-footer mt-auto",
+            tags$strong("Disclaimers: "),
+            tags$ul(
+              style = "margin:4px 0 0 0; padding-left:18px;",
+              tags$li("This tool is for decision support only and does not replace clinical judgement or formal genetics referral."),
+              tags$li("Panel criteria based on NHS Rare & Inherited Disease Eligibility Criteria v9 and PanelApp Genomics England."),
+              tags$li("Likelihood ratios are approximations from published literature; posterior probabilities are estimates only."),
+              tags$li("Developed for educational and clinical aid purposes. Not validated for clinical use.")
+            )
+          )
+        )
+      ),
+
+      # ── Tab 2: Variant Interpretation ──────────────────────────────────────
+      nav_panel(
+        title = "Variant Interpretation",
+        icon  = icon("dna"),
+        div(
+          style = "overflow-y:auto; height:calc(100vh - 100px); padding:16px;",
+          uiOutput("vi_panel")
         )
       )
     )
@@ -798,6 +845,307 @@ server <- function(input, output, session) {
   output$posterior_plot <- renderPlotly({
     req(rv$posterior_df)
     build_posterior_plot(rv$posterior_df, condition_labels, condition_colours)
+  })
+
+  # ── Variant Interpretation module ──────────────────────────────────────────
+  rv_vi <- reactiveValues(
+    gene     = NULL,
+    cond_ids = NULL,
+    cond_id  = NULL,
+    result   = NULL,
+    error    = NULL
+  )
+
+  observeEvent(input$vi_lookup, {
+    gene_raw <- trimws(input$vi_gene)
+    if (nchar(gene_raw) == 0) return()
+    gene <- toupper(gene_raw)
+
+    rv_vi$result  <- NULL
+    rv_vi$error   <- NULL
+    rv_vi$cond_id <- NULL
+
+    cond_ids       <- gene_to_condition[[gene]]
+    rv_vi$gene     <- gene
+    rv_vi$cond_ids <- if (is.null(cond_ids)) character(0) else cond_ids
+    if (!is.null(cond_ids) && length(cond_ids) == 1) rv_vi$cond_id <- cond_ids[[1]]
+  })
+
+  observeEvent(input$vi_cond_select, {
+    rv_vi$cond_id <- input$vi_cond_select
+    rv_vi$result  <- NULL
+  })
+
+  observeEvent(input$vi_assess, {
+    rv_vi$result <- NULL
+    rv_vi$error  <- NULL
+
+    cond_id <- rv_vi$cond_id
+    if (is.null(cond_id)) { rv_vi$error <- "No condition selected."; return() }
+
+    cond     <- variant_conditions[[cond_id]]
+    zygosity <- input$vi_zygosity
+    if (is.null(zygosity) || !(zygosity %in% names(cond$prior))) {
+      rv_vi$error <- "Please select a valid zygosity."; return()
+    }
+
+    feature_states <- list()
+    for (feat in cond$features) {
+      feature_states[[feat$id]] <- input[[paste0("vi_feat_", feat$id)]]
+    }
+
+    rv_vi$result <- compute_vi_posterior(cond, zygosity, feature_states)
+  })
+
+  # ── VI panel ───────────────────────────────────────────────────────────────
+  output$vi_panel <- renderUI({
+    tagList(
+      card(
+        card_header(tags$span("\U0001F9EC Variant Interpretation — Phenotype-Informed Causativity Assessment")),
+        card_body(
+          tags$p(
+            class = "text-muted", style = "font-size:.82rem; margin-bottom:10px;",
+            "Enter the gene symbol from a reported P/LP variant. Select zygosity and indicate which features are present, absent, or not assessed.",
+            " The tool estimates the posterior probability that this variant is the primary cause of the patient’s renal disease."
+          ),
+          fluidRow(
+            column(7, textInput("vi_gene", "Gene symbol",
+                                placeholder = "e.g. COL4A5, PKD1, UMOD, NPHS1")),
+            column(5, br(), actionButton("vi_lookup", "Look up",
+                                         class = "btn btn-primary btn-sm w-100",
+                                         icon  = icon("search")))
+          ),
+          uiOutput("vi_condition_ui"),
+          uiOutput("vi_zygosity_ui"),
+          uiOutput("vi_features_ui"),
+          uiOutput("vi_assess_btn")
+        )
+      ),
+      uiOutput("vi_result_ui"),
+      tags$div(
+        class = "disclaimer-footer mt-3",
+        tags$strong("Variant interpretation disclaimer: "),
+        "Posterior probabilities assume the variant has been robustly classified P/LP by the reporting laboratory. ",
+        "This tool does not replace genetics specialist review and should not be used to reclassify variants or make management decisions without appropriate clinical expertise."
+      )
+    )
+  })
+
+  output$vi_condition_ui <- renderUI({
+    gene     <- rv_vi$gene
+    cond_ids <- rv_vi$cond_ids
+    if (is.null(gene)) return(NULL)
+
+    if (length(cond_ids) == 0) {
+      return(tags$div(
+        class = "alert alert-warning mt-2", style = "font-size:.83rem;",
+        tags$strong(gene), " was not found in the variant interpretation database.",
+        " This gene may not be covered by this tool or may appear under a different symbol."
+      ))
+    }
+
+    if (length(cond_ids) == 1) {
+      cond <- variant_conditions[[cond_ids[[1]]]]
+      return(tags$div(
+        class = "alert alert-success mt-2", style = "font-size:.83rem;",
+        tags$strong(gene), " — ", cond$label
+      ))
+    }
+
+    cond_choices <- setNames(
+      cond_ids,
+      sapply(cond_ids, function(id) variant_conditions[[id]]$label)
+    )
+    tagList(
+      tags$div(
+        class = "alert alert-info mt-2", style = "font-size:.83rem;",
+        tags$strong(gene), " maps to multiple condition groups. Select the relevant one based on zygosity and phenotype."
+      ),
+      selectInput("vi_cond_select", "Condition group", choices = cond_choices)
+    )
+  })
+
+  output$vi_zygosity_ui <- renderUI({
+    cond_id <- rv_vi$cond_id
+    if (is.null(cond_id)) return(NULL)
+    cond <- variant_conditions[[cond_id]]
+
+    zyg_choices <- setNames(
+      cond$zygosity_options,
+      zygosity_labels[cond$zygosity_options]
+    )
+    tags$div(
+      class = "mt-2",
+      selectInput("vi_zygosity", "Variant zygosity",
+                  choices  = zyg_choices,
+                  selected = cond$zygosity_options[[1]])
+    )
+  })
+
+  output$vi_features_ui <- renderUI({
+    cond_id <- rv_vi$cond_id
+    if (is.null(cond_id)) return(NULL)
+    cond <- variant_conditions[[cond_id]]
+
+    rows <- lapply(cond$features, function(feat) {
+      key_badge <- if (isTRUE(feat$key))
+        tags$span(class = "badge bg-secondary ms-1",
+                  style = "font-size:.66rem; vertical-align:middle;", "key")
+      else NULL
+
+      caveat_note <- if (!is.null(feat$caveat))
+        tags$div(class = "text-muted fst-italic",
+                 style = "font-size:.76rem; margin-top:2px;", feat$caveat)
+      else NULL
+
+      absent_note <- if (is.null(feat$lr_absent))
+        tags$div(class = "text-muted",
+                 style = "font-size:.72rem; margin-top:2px;",
+                 "Absence does not update the posterior for this feature.")
+      else NULL
+
+      tags$div(
+        class = "border rounded p-2 mb-2",
+        tags$div(
+          class = "d-flex justify-content-between align-items-start gap-2",
+          tags$div(
+            style = "flex:1;",
+            tags$span(style = "font-size:.84rem; font-weight:600;", feat$label),
+            key_badge,
+            caveat_note,
+            absent_note
+          ),
+          radioGroupButtons(
+            inputId  = paste0("vi_feat_", feat$id),
+            label    = NULL,
+            choices  = c("Present", "Absent", "Not assessed"),
+            selected = "Not assessed",
+            size     = "xs",
+            status   = "outline-secondary"
+          )
+        )
+      )
+    })
+
+    tagList(
+      tags$div(class = "section-label mt-3 mb-1", "Phenotypic features"),
+      tags$p(
+        style = "font-size:.8rem; color:#6c757d; margin-bottom:8px;",
+        "Indicate whether each feature is present, absent, or not assessed.",
+        " ", tags$strong("Absent"), " only updates the posterior where absence is diagnostically informative."
+      ),
+      do.call(tagList, rows)
+    )
+  })
+
+  output$vi_assess_btn <- renderUI({
+    if (is.null(rv_vi$cond_id)) return(NULL)
+    tags$div(
+      class = "mt-3",
+      actionButton("vi_assess", "Assess Variant",
+                   class = "btn btn-success w-100",
+                   icon  = icon("calculator"))
+    )
+  })
+
+  output$vi_result_ui <- renderUI({
+    err    <- rv_vi$error
+    result <- rv_vi$result
+
+    if (!is.null(err)) return(tags$div(class = "alert alert-danger mt-3", err))
+    if (is.null(result)) return(NULL)
+
+    cond    <- variant_conditions[[rv_vi$cond_id]]
+    verdict <- variant_verdict(result$posterior)
+
+    pct_prior <- round(result$prior    * 100, 1)
+    pct_post  <- round(result$posterior * 100, 1)
+    alert_cls <- switch(verdict$colour,
+      success = "alert-success", warning = "alert-warning",
+      danger  = "alert-danger",  "alert-secondary"
+    )
+
+    contrib_rows <- if (length(result$contributions) > 0) {
+      lapply(result$contributions, function(co) {
+        col <- if (co$lr >= 1) "#198754" else "#dc3545"
+        arr <- if (co$lr >= 1) "↑" else "↓"
+        tags$tr(
+          tags$td(style = "font-size:.8rem;", co$label),
+          tags$td(style = "font-size:.8rem;", co$state),
+          tags$td(style = paste0("font-size:.8rem; color:", col, "; font-weight:600;"),
+                  paste0(arr, " LR = ", co$lr))
+        )
+      })
+    } else {
+      list(tags$tr(tags$td(
+        colspan = "3", style = "color:#6c757d; font-size:.8rem;",
+        "No features assessed — posterior equals prior."
+      )))
+    }
+
+    flag_items <- lapply(cond$flags,       function(f) tags$li(style = "font-size:.8rem;", f))
+    ref_items  <- lapply(cond$references,  function(r) tags$li(style = "font-size:.8rem;", r))
+
+    card(
+      class = "mt-3",
+      card_header(tags$span("\U0001F4CA Assessment result — ", cond$label)),
+      card_body(
+        tags$div(
+          class = "d-flex gap-4 mb-3 flex-wrap",
+          tags$div(
+            tags$div(class = "text-muted", style = "font-size:.78rem;", "Prior probability"),
+            tags$div(style = "font-size:1.5rem; font-weight:700; color:#1a6fa8;",
+                     paste0(pct_prior, "%")),
+            tags$div(class = "text-muted", style = "font-size:.73rem;",
+                     "P/LP in this gene / zygosity")
+          ),
+          tags$div(style = "font-size:1.8rem; color:#ccc; line-height:2.5rem;", "→"),
+          tags$div(
+            tags$div(class = "text-muted", style = "font-size:.78rem;", "Posterior probability"),
+            tags$div(style = "font-size:1.5rem; font-weight:700; color:#1a6fa8;",
+                     paste0(pct_post, "%")),
+            tags$div(class = "text-muted", style = "font-size:.73rem;",
+                     "after phenotype evidence")
+          )
+        ),
+        tags$div(
+          class = paste("alert", alert_cls),
+          style = "margin-bottom:12px;",
+          tags$strong(verdict$label),
+          tags$br(),
+          tags$span(style = "font-size:.83rem;", verdict$detail)
+        ),
+        tags$details(
+          tags$summary(
+            style = "font-size:.82rem; cursor:pointer; color:#1a6fa8; font-weight:600;",
+            "Feature contributions"
+          ),
+          tags$table(
+            class = "table table-sm mt-2",
+            tags$thead(tags$tr(
+              tags$th("Feature"), tags$th("State"), tags$th("Effect")
+            )),
+            tags$tbody(do.call(tagList, contrib_rows))
+          )
+        ),
+        if (length(flag_items) > 0) tags$details(
+          class = "mt-2",
+          tags$summary(
+            style = "font-size:.82rem; cursor:pointer; color:#e07000; font-weight:600;",
+            paste0("⚠️  Clinical flags (", length(cond$flags), ")")
+          ),
+          tags$ul(class = "mt-2", do.call(tagList, flag_items))
+        ),
+        if (length(ref_items) > 0) tags$details(
+          class = "mt-2",
+          tags$summary(
+            style = "font-size:.82rem; cursor:pointer; color:#6c757d; font-weight:600;",
+            "Key references"
+          ),
+          tags$ul(class = "mt-2", do.call(tagList, ref_items))
+        )
+      )
+    )
   })
 }
 
