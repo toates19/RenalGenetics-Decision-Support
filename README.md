@@ -1,6 +1,10 @@
 # RenalGenetics Decision Support
 
-An R Shiny decision-support tool for non-genetics clinicians managing patients with suspected inherited renal conditions.
+An R Shiny decision-support tool for non-genetics clinicians managing patients with suspected inherited renal conditions. The app has three integrated modules:
+
+1. **NHS GT Directory eligibility** — two-layer scoring against NHS Rare & Inherited Disease criteria for 12 genomic test panels (R193–R446)
+2. **Bayesian diagnostic model** — posterior probability ranking across 24 inherited renal conditions, updated by HPO terms, family history, consanguinity, age, sex, and biopsy findings
+3. **Variant interpretation** — phenotype-informed causativity assessment for P/LP variants returned from panel testing, covering 38 condition groups and 196 genes
 
 ---
 
@@ -260,9 +264,20 @@ The module covers **38 condition groups** spanning the full breadth of inherited
 Each group defines:
 - **Prior probability** that a P/LP-classified variant is causative given zygosity (baking in lab classification accuracy, penetrance, and baseline phenotype-gene concordance)
 - **Phenotypic feature likelihood ratios** (`lr_present` / `lr_absent`) for discriminating features
-- **Clinical flags** marking parameters that require expert review before the module goes live
+- **Clinical flags** marking parameters with meaningful uncertainty, for expert review
 
-The UI layer for this module is in development.
+### Using the variant interpretation module
+
+The module is on the **Variant Interpretation** tab in the right panel (alongside **Diagnostic Assessment**).
+
+1. Enter a gene symbol and click **Look up** — the tool identifies the condition group. Genes mapping to multiple conditions (e.g. *COL4A3/COL4A4*, which can cause biallelic Alport or monoallelic COL4 het disease) prompt a condition picker.
+2. Select the variant **zygosity** from the options available for that condition.
+3. For each phenotypic feature, toggle **Present**, **Absent**, or **Not assessed**. Absence updates the posterior only where `lr_absent` is defined (shown as "key" features or with an informative absence note).
+4. Click **Assess Variant**.
+
+The posterior is computed via log-odds Bayesian update: prior odds × product of applicable LRs. The result shows prior → posterior, a colour-coded verdict (≥75% strongly supports; 50–75% consistent; 25–50% partial / review; <25% inconsistent), an expandable feature contributions table, clinical flags, and key references.
+
+**Posterior probabilities assume the variant has been robustly classified P/LP by the reporting laboratory.** This module does not replace genetics specialist review.
 
 ---
 
