@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "RenalGenetics Decision Support"
+type: software
+authors:
+  - family-names: Oates
+    given-names: Tom
+date-released: 2026-07-27
+url: "https://github.com/toates19/RenalGenetics-Decision-Support"
+abstract: >
+  A Shiny-based decision-support tool for non-genetics nephrology
+  clinicians navigating NHS genomic testing pathways for suspected
+  inherited renal disease. Covers eligibility scoring across 12 NHS
+  genomic testing panels, a Bayesian diagnostic model spanning 24
+  gene-level conditions, and a variant interpretation module (196
+  genes across 38 condition groups). Beta software, not validated
+  for clinical use.
