@@ -1,5 +1,7 @@
 # RenalGenetics Decision Support
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21622190.svg)](https://doi.org/10.5281/zenodo.21622190)
+
 An R Shiny decision-support tool for non-genetics clinicians managing patients with suspected inherited renal conditions. The app has three integrated modules:
 
 1. **NHS GT Directory eligibility** — two-layer scoring against NHS Rare & Inherited Disease criteria for 12 genomic test panels (R193–R446)
