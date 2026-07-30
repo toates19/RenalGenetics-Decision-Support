@@ -1,6 +1,6 @@
 # RenalGenetics Decision Support
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21622190.svg)](https://doi.org/10.5281/zenodo.21622190)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21622189.svg)](https://doi.org/10.5281/zenodo.21622189)
 
 An R Shiny decision-support tool for non-genetics clinicians managing patients with suspected inherited renal conditions. The app has three integrated modules:
 
