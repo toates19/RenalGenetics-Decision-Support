@@ -293,13 +293,24 @@ variant_conditions <- list(
     inheritance      = "AD_het",
     zygosity_options = c("Heterozygous"),
     prior = c(
-      Heterozygous = 0.40   # ~40% penetrance for haematuria; <3% ESKD by 60
-                            # UNCERTAIN: penetrance estimates vary; 1/106 prevalence (Gibson JASN 2021)
-                            # suggests many carriers in general population are asymptomatic
+      # Changed 2026-07-30: was 0.40 (~haematuria penetrance). Recalibrated to
+      # 0.03, the population-based (non-hospital-biased) ESKF-by-age-60
+      # penetrance estimate (Savige et al. KIR 2022, PMID 36090501), to align
+      # with the same ESKD-causation framing used for the sibling COL4_het
+      # prior in data/bayes_params.R. Note this is a stricter endpoint than
+      # "any clinically apparent phenotype" — if the presenting question is
+      # isolated haematuria rather than progressive CKD/ESKD, 0.40 may be the
+      # more appropriate baseline; the per-feature LRs below (haematuria, GBM
+      # thinning, eGFR) still do most of the case-specific adjustment either way.
+      Heterozygous = 0.03
     ),
     features = list(
+      # lr_absent strengthened 0.25 -> 0.1 (4x -> 10x reduction if absent),
+      # matching the bayes_params.R change: haematuria is a near-universal
+      # cardinal feature of symptomatic carriers, so its absence should be
+      # about as specific against causation as it is for Alport_XL/AR.
       list(id="haematuria_col4het",  label="Microscopic haematuria",
-           lr_present=15.0, lr_absent=0.25, key=TRUE),
+           lr_present=15.0, lr_absent=0.1, key=TRUE),
       list(id="no_hearing_loss",     label="Absence of hearing loss",
            lr_present=2.0,  lr_absent=NULL, key=FALSE,
            caveat="Hearing loss is uncommon in COL4 hets — its presence should prompt reconsideration of biallelic disease or X-linked Alport"),
@@ -311,7 +322,7 @@ variant_conditions <- list(
            lr_present=2.0,  lr_absent=NULL, key=FALSE)
     ),
     flags = c(
-      "Prior of 0.40 reflects haematuria penetrance — if the clinical question is whether this variant causes ESKD, the relevant prior is much lower (~0.03 by age 60)",
+      "Prior of 0.03 reflects population-based ESKD-by-60 penetrance (Savige KI Rep 2022) — if the clinical question is whether this variant explains isolated haematuria rather than progressive CKD/ESKD, a higher prior (~0.40, haematuria penetrance) may be more appropriate for that framing",
       "Hearing loss and ocular features occur uncommonly if at all — their presence should prompt consideration of biallelic disease (Savige KI Rep 2022)",
       "The distinction between COL4_het as incidental finding vs true cause of isolated haematuria is often academic — management is similar (monitoring)"
     ),
