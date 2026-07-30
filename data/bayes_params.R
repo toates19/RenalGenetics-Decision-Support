@@ -56,7 +56,7 @@ condition_priors <- c(
   APOA1_Amyloid = 1 / 2000000,  # ~5% of hereditary systemic amyloidosis
   GSN_Amyloid   = 1 / 5000000,  # ~2% of hereditary systemic amyloidosis
   C3G           = 1 / 1000000,
-  NoGenetic     = 1 / 134       # ~85% prior at baseline; calibrated to nephrology referral
+  NoGenetic     = 0.85           # ~85% prior at baseline; calibrated to nephrology referral
                                  # population considering genetic testing (Groopman NEJM 2019)
 )
 

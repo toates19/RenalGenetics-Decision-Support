@@ -178,6 +178,28 @@ run_bayesian_update <- function(confirmed_hpo_ids, age, sex, family_history,
   ci_df
 }
 
+
+# Split the joint posterior (23 conditions + NoGenetic) into:
+#   p_genetic   — probability a modelled genetic cause explains the presentation
+#   disease_df  — the 23 disease conditions only, renormalised to sum to 1,
+#                 i.e. the differential *conditional on* a modelled genetic cause
+split_posterior <- function(posterior_df) {
+  ng_row    <- posterior_df[posterior_df$condition == "NoGenetic", ]
+  p_genetic <- if (nrow(ng_row) == 1) 1 - ng_row$posterior else NA_real_
+
+  disease_df <- posterior_df[posterior_df$condition != "NoGenetic", ]
+  denom <- sum(disease_df$posterior)
+  if (denom > 0) {
+    disease_df$posterior <- disease_df$posterior / denom
+    disease_df$ci_lower  <- pmax(0, disease_df$ci_lower / denom)
+    disease_df$ci_upper  <- pmin(1, disease_df$ci_upper / denom)
+  }
+  disease_df <- disease_df[order(disease_df$posterior, decreasing = TRUE), ]
+  rownames(disease_df) <- NULL
+
+  list(p_genetic = p_genetic, disease_df = disease_df)
+}
+
 build_posterior_plot <- function(posterior_df, condition_labels, condition_colours) {
 
   df <- posterior_df
@@ -212,7 +234,7 @@ build_posterior_plot <- function(posterior_df, condition_labels, condition_colou
   ) |>
     plotly::layout(
       xaxis = list(
-        title           = "Relative ranking (bar length only — not a clinical probability)",
+        title           = "Relative ranking among modelled genetic conditions, if genetic (bar length only — not a clinical probability)",
         showticklabels  = FALSE,
         range           = c(0, min(100, max(df$pct) * 1.35 + 5))
       ),

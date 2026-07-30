@@ -287,6 +287,8 @@ server <- function(input, output, session) {
     analysis_done   = FALSE,
     eligibility     = NULL,
     posterior_df    = NULL,
+    p_genetic       = NULL,
+    disease_df      = NULL,
     error_msg       = NULL,
     run_error       = NULL,
     loading_hpo     = FALSE,
@@ -561,6 +563,10 @@ server <- function(input, output, session) {
         age_modifier_fn          = age_modifier
       )
 
+      split               <- split_posterior(rv$posterior_df)
+      rv$p_genetic        <- split$p_genetic
+      rv$disease_df       <- split$disease_df
+
       rv$analysis_done <- TRUE
     }, error = function(e) {
       rv$run_error <- conditionMessage(e)
@@ -811,15 +817,15 @@ server <- function(input, output, session) {
 
   # ── Bayesian summary note ──────────────────────────────────────────────────
   output$bayes_summary <- renderUI({
-    req(rv$posterior_df)
-    df    <- rv$posterior_df
-    top   <- df[1, ]
-    lbl   <- condition_labels[top$condition]
+    req(rv$disease_df, rv$p_genetic)
+    top <- rv$disease_df[1, ]
+    lbl <- condition_labels[top$condition]
+    pct_genetic <- round(rv$p_genetic * 100, 1)
 
     n_auto <- rv$n_auto_hpo
     n_ext  <- rv$n_extracted_hpo
     note <- if (n_auto == 0 && n_ext == 0) {
-      "No clinical features entered — chart shows priors modified by age, family history and consanguinity only."
+      "No clinical features entered — estimate shows priors modified by age, family history and consanguinity only."
     } else if (n_ext == 0) {
       paste0("Based on ", n_auto, " HPO term", if (n_auto != 1) "s" else "",
              " derived from structured form inputs.")
@@ -832,19 +838,20 @@ server <- function(input, output, session) {
 
     tags$div(
       class = "summary-box",
-      tags$strong("Top-ranked condition: "), lbl, tags$br(),
+      tags$strong("Estimated probability of a modelled genetic cause: "), paste0(pct_genetic, "%"), tags$br(),
+      tags$strong("Top-ranked condition if genetic: "), lbl, tags$br(),
       tags$small(class = "text-muted", note),
       tags$br(),
       tags$small(class = "text-muted",
                  style = "font-style:italic;",
-                 "Bar lengths show relative ranking across modelled conditions only — not validated clinical probabilities. A genetic cause outside this list, or co-existing diagnoses, remain possible.")
+                 "Chart below ranks conditions relative to each other, assuming a modelled genetic cause is present — not validated clinical probabilities. A genetic cause outside this list, or co-existing diagnoses, remain possible.")
     )
   })
 
   # ── Plotly posterior chart ─────────────────────────────────────────────────
   output$posterior_plot <- renderPlotly({
-    req(rv$posterior_df)
-    build_posterior_plot(rv$posterior_df, condition_labels, condition_colours)
+    req(rv$disease_df)
+    build_posterior_plot(rv$disease_df, condition_labels, condition_colours)
   })
 
   # ── Variant Interpretation module ──────────────────────────────────────────
