@@ -39,7 +39,7 @@ shiny::runApp("path/to/RenalGenetics-Decision-Support")
 
 Or open `app.R` in RStudio and click **Run App**.
 
-A hosted version is available at: **[https://toates19.shinyapps.io/RenalGenetics/](https://toates19-renalgenetics-decision-support.share.connect.posit.cloud)**
+A hosted version is available at: **[https://toates19-renalgenetics-decision-support.share.connect.posit.cloud/](https://toates19-renalgenetics-decision-support.share.connect.posit.cloud/)**
 
 ---
 
