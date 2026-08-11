@@ -1,0 +1,431 @@
+<title>Running the RenalGenetics Validation — How-To</title>
+<style>
+  :root {
+    --paper:      #ffffff;
+    --surface:    #f1f5f7;
+    --surface-2:  #e7eef1;
+    --rule:       #dbe3e8;
+    --ink:        #16202b;
+    --ink-soft:   #4a5b68;
+    --ink-faint:  #6f818e;
+    --accent:     #0f5f7a;
+    --accent-soft:#e2eff4;
+    --caution:    #8a4416;
+    --caution-bg: #fbf1e8;
+    --critical:   #9c1c30;
+    --critical-bg:#fbedef;
+    --ok:         #1c6b50;
+    --code-bg:    #16202b;
+    --code-ink:   #dfe8ec;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #11181f;
+      --surface:    #18222b;
+      --surface-2:  #1f2b35;
+      --rule:       #2b3a46;
+      --ink:        #e6edf1;
+      --ink-soft:   #a9bac6;
+      --ink-faint:  #8195a3;
+      --accent:     #64b8d4;
+      --accent-soft:#152c36;
+      --caution:    #e0a274;
+      --caution-bg: #2a1d13;
+      --critical:   #e88a99;
+      --critical-bg:#2c1519;
+      --ok:         #6cc3a2;
+      --code-bg:    #0b1116;
+      --code-ink:   #d3e0e6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:      #11181f;
+    --surface:    #18222b;
+    --surface-2:  #1f2b35;
+    --rule:       #2b3a46;
+    --ink:        #e6edf1;
+    --ink-soft:   #a9bac6;
+    --ink-faint:  #8195a3;
+    --accent:     #64b8d4;
+    --accent-soft:#152c36;
+    --caution:    #e0a274;
+    --caution-bg: #2a1d13;
+    --critical:   #e88a99;
+    --critical-bg:#2c1519;
+    --ok:         #6cc3a2;
+    --code-bg:    #0b1116;
+    --code-ink:   #d3e0e6;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 6rem;
+  }
+
+  /* ---- masthead ---- */
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 1.5rem; margin-bottom: 2.5rem; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .75rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 .7rem;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 4.5vw, 2.7rem);
+    line-height: 1.14;
+    letter-spacing: -.012em;
+    text-wrap: balance;
+    margin: 0 0 .6rem;
+  }
+  .standfirst {
+    font-size: 1.075rem;
+    color: var(--ink-soft);
+    max-width: 42rem;
+    margin: 0;
+  }
+
+  /* ---- study-at-a-glance ---- */
+  .glance {
+    display: grid;
+    /* exactly 3 across so the six entries fill two complete rows */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin: 0 0 3rem;
+  }
+  .glance div { background: var(--surface); padding: .95rem 1.1rem; }
+  .glance dt {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 .3rem;
+  }
+  .glance dd { margin: 0; font-size: .93rem; line-height: 1.45; }
+
+  /* ---- steps ---- */
+  .step { display: grid; grid-template-columns: 3rem 1fr; gap: 0 1.4rem; margin: 0 0 3.25rem; }
+  .step-num {
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding-top: .42rem;
+    border-top: 2px solid var(--accent);
+  }
+  .step-body { border-top: 2px solid var(--rule); padding-top: .35rem; min-width: 0; }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.5rem;
+    letter-spacing: -.008em;
+    text-wrap: balance;
+    margin: 0 0 .55rem;
+  }
+  h3 {
+    font-family: var(--sans);
+    font-weight: 650;
+    font-size: .82rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 2rem 0 .6rem;
+  }
+  p { margin: 0 0 1rem; max-width: 44rem; }
+  ul, ol { margin: 0 0 1rem; padding-left: 1.15rem; max-width: 44rem; }
+  li { margin-bottom: .4rem; }
+  li::marker { color: var(--ink-faint); }
+
+  code {
+    font-family: var(--mono);
+    font-size: .855em;
+    background: var(--surface-2);
+    padding: .12em .38em;
+    border-radius: 3px;
+    word-break: break-word;
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    font-family: var(--mono);
+    font-size: .84rem;
+    line-height: 1.6;
+    padding: 1rem 1.15rem;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 0 0 1.15rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  pre .c { color: #8fa6b2; }
+
+  /* ---- callouts ---- */
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: .9rem 1.15rem;
+    margin: 0 0 1.3rem;
+    border-radius: 0 4px 4px 0;
+  }
+  .note.caution { border-left-color: var(--caution); background: var(--caution-bg); }
+  .note.critical { border-left-color: var(--critical); background: var(--critical-bg); }
+  .note p:last-child { margin-bottom: 0; }
+  .note-label {
+    display: block;
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    margin-bottom: .38rem;
+    color: var(--accent);
+  }
+  .note.caution .note-label { color: var(--caution); }
+  .note.critical .note-label { color: var(--critical); }
+
+  /* ---- tables ---- */
+  .scroll { overflow-x: auto; margin: 0 0 1.4rem; border: 1px solid var(--rule); border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: .875rem; }
+  th, td { text-align: left; padding: .55rem .8rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  thead th {
+    background: var(--surface);
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.name { font-family: var(--mono); font-size: .82rem; white-space: nowrap; color: var(--accent); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  hr { border: none; border-top: 1px solid var(--rule); margin: 3rem 0; }
+
+  footer {
+    margin-top: 3.5rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+    font-size: .82rem;
+    color: var(--ink-faint);
+  }
+  footer p { margin-bottom: .35rem; }
+
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible, *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (max-width: 52rem) {
+    .glance { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 34rem) {
+    .glance { grid-template-columns: 1fr; }
+    .step { grid-template-columns: 1fr; gap: 0; }
+    .step-num { border-top: none; padding-top: 0; margin-bottom: .2rem; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">RenalGenetics Decision Support · Validation</p>
+    <h1>Running the validation study</h1>
+    <p class="standfirst">How to extract the data, score it against the model, and read what comes back. Written for whoever is doing the extraction and whoever runs the numbers — usually two different people.</p>
+  </header>
+
+  <dl class="glance">
+    <div><dt>Design</dt><dd>Retrospective blinded case series</dd></div>
+    <div><dt>Sampling</dt><dd>Consecutive patients who had a renal gene panel sent</dd></div>
+    <div><dt>Primary endpoint</dt><dd>Calibration — observed diagnostic yield vs predicted p(genetic)</dd></div>
+    <div><dt>Secondary</dt><dd>Differential ranking accuracy; eligibility agreement</dd></div>
+    <div><dt>Pilot size</dt><dd>100 patients (template capacity)</dd></div>
+    <div><dt>Not in scope</dt><dd>Variant interpretation module — deferred to a prospective MDT comparison</dd></div>
+  </dl>
+
+  <div class="note">
+    <span class="note-label">Why calibration is primary</span>
+    <p>The model currently assumes about 15% of the pre-test population has a modelled monogenic cause. Enriched nephrology cohorts typically run 20–40%. Observed yield in a consecutively-tested cohort tests that assumption directly, and it moves every posterior in the app. Ranking accuracy at n=100 gives roughly 30 gene-positive cases — a ±15% confidence interval — so treat it as exploratory and pre-specify extension to ~300 if the pilot holds.</p>
+  </div>
+
+  <hr>
+
+  <!-- ─────────── STEP 1 ─────────── -->
+  <section class="step">
+    <div class="step-num">01</div>
+    <div class="step-body">
+      <h2>Extract the data</h2>
+      <p>Everything goes into <code>RenalGenetics_Validation_Template.xlsx</code> — 49 columns across three sheets, with room for 100 patients. Row 1 is a group banner, row 2 holds the column names, and patient data starts at row 3. Row 3 ships with a worked example; overwrite it.</p>
+
+      <h3>Split the work in two</h3>
+      <p>The blinded block runs from <code>Patient_ID</code> through <code>Ctx_APOL1_consented</code>. Complete it <strong>without sight of the genetic result</strong>. The result block — <code>Panel_tested</code>, <code>Result</code>, <code>Specific_diagnosis</code>, <code>Variant_zygosity</code>, <code>Model_condition</code> — is filled in a separate pass, ideally by a different person.</p>
+
+      <div class="note caution">
+        <span class="note-label">The mistake that quietly loses data</span>
+        <p>The app only shows a feature's controls once the matching box is ticked in the presentation picker. A patient whose <code>Hearing_loss = Y</code> but whose <code>Pres_Haematuria = N</code> has, as far as the app is concerned, no hearing loss at all — that field lives inside the haematuria branch.</p>
+        <p>The scorer reproduces this behaviour deliberately, because scoring hidden features would flatter the tool being tested. <strong>Tick every presentation that applies before filling anything below it.</strong> Rows where the gate drops a recorded feature come back flagged in the <code>warnings</code> column rather than failing silently — but it is far better to get it right at extraction.</p>
+      </div>
+
+      <h3>Recording the genetic result</h3>
+      <p>Three rules matter more than the rest:</p>
+      <ul>
+        <li><code>Variant_zygosity</code> is <strong>required</strong> whenever a P/LP variant is reported. It cannot be reconstructed later, and it decides the COL4A3/COL4A4 mapping.</li>
+        <li>A <strong>heterozygous</strong> COL4A3 or COL4A4 variant maps to <code>COL4_het</code>, not <code>Alport_AR</code>. These are separate conditions with priors differing about ninefold. An earlier version of the lookup sent all COL4A3/4 variants to <code>Alport_AR</code>; if you were briefed on that version, this is the change.</li>
+        <li>A P/LP variant in a gene the model does not cover is <code>Not_modelled</code>, <strong>never</strong> <code>NoGenetic</code>. Those patients are genetically positive, and counting them as negatives would drag observed yield downward — corrupting the primary endpoint.</li>
+      </ul>
+      <p>The full lookup is on the Instructions sheet, and every column is defined on the Data Dictionary sheet.</p>
+    </div>
+  </section>
+
+  <!-- ─────────── STEP 2 ─────────── -->
+  <section class="step">
+    <div class="step-num">02</div>
+    <div class="step-body">
+      <h2>Run the scorer</h2>
+      <p><code>scripts/run_validation.R</code> runs the eligibility scorer and the Bayesian differential over every row, without going through the app. It exists because hand-entering 100 patients into the Shiny interface is not realistic, and because the model was otherwise only reachable through the app's reactive layer.</p>
+
+      <h3>What it needs</h3>
+      <ul>
+        <li><strong>R</strong>, with <code>Rscript</code> on your path. Developed against R 4.6.0.</li>
+        <li>The <strong><code>openxlsx</code></strong> package — the only dependency beyond base R, used to read the spreadsheet. Install with <code>install.packages("openxlsx")</code>.</li>
+        <li>A checkout of the repository, and <strong>your working directory must be the repository root</strong>. The script sources <code>data/</code> and <code>R/</code> by relative path and stops with a clear message if it cannot find them.</li>
+        <li>The completed template.</li>
+      </ul>
+
+      <h3>What to type</h3>
+<pre><code>cd /path/to/RenalGenetics-Decision-Support
+Rscript scripts/run_validation.R
+
+<span class="c"># or, naming the input and an output prefix explicitly:</span>
+Rscript scripts/run_validation.R my_extraction.xlsx pilot1</code></pre>
+      <p>With no arguments it reads <code>RenalGenetics_Validation_Template.xlsx</code> and writes files prefixed <code>validation</code>. The first argument is the input workbook; the second is the output prefix.</p>
+
+      <h3>What it does, in order</h3>
+      <ol>
+        <li>Loads the model parameters, panel definitions and scoring code.</li>
+        <li>Runs a <strong>fidelity check</strong> — see below — and prints the result.</li>
+        <li>Reads the <code>Data Entry</code> sheet, skipping rows with a blank <code>Patient_ID</code>.</li>
+        <li>For each patient: rebuilds the app's inputs, derives the HPO term set, scores all 12 panels for eligibility, and runs the Bayesian update.</li>
+        <li>Writes <code>&lt;prefix&gt;_results.csv</code> and <code>&lt;prefix&gt;_summary.txt</code>.</li>
+      </ol>
+
+      <div class="note">
+        <span class="note-label">The fidelity check</span>
+        <p>Model parameters are looked up by exact string. If the app's wording and a parameter key ever drift apart, the modifier silently stops applying — no error, just a quietly wrong answer. <code>check_harness_fidelity()</code> compares the two vocabularies before every run and prints <code>OK</code> when they agree.</p>
+        <p>It is not decorative: it is what caught the tubulointerstitial biopsy modifier that had never once fired in the app. <strong>If it reports a problem, stop and resolve it before trusting the output.</strong> Problems are also written into the summary file so a saved run carries its own warning.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────── STEP 3 ─────────── -->
+  <section class="step">
+    <div class="step-num">03</div>
+    <div class="step-body">
+      <h2>Read the output</h2>
+
+      <h3>Per-patient results</h3>
+      <p><code>&lt;prefix&gt;_results.csv</code> has one row per patient:</p>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Column</th><th scope="col">What it holds</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">n_hpo</td><td>How many HPO terms the extraction produced. A zero here means the app would have had nothing to score.</td></tr>
+            <tr><td class="name">hpo_ids</td><td>The derived terms, semicolon-separated — use this to audit a surprising result.</td></tr>
+            <tr><td class="name">p_genetic</td><td>Headline probability that any modelled genetic cause explains the presentation. This is the quantity the primary endpoint tests.</td></tr>
+            <tr><td class="name">top1 · top1_p · top2 · top3</td><td>The three highest-ranked conditions in the disease-only differential, and the leader's probability. This differential is conditional on there being a monogenic cause, so it stays meaningful even when <code>p_genetic</code> is low.</td></tr>
+            <tr><td class="name">true_condition</td><td>The confirmed diagnosis, copied from <code>Model_condition</code>.</td></tr>
+            <tr><td class="name">rank_true</td><td>Where the confirmed diagnosis placed in the differential. Blank for <code>NoGenetic</code> and <code>Not_modelled</code>, which have no rank by construction.</td></tr>
+            <tr><td class="name">top1_correct · top3_correct</td><td>Whether the confirmed diagnosis ranked first, or in the top three.</td></tr>
+            <tr><td class="name">panels_likely · panels_possible</td><td>Which of the 12 panels the app flagged, at each confidence level.</td></tr>
+            <tr><td class="name">panel_flagged</td><td>Whether the panel actually sent was among those flagged. <code>FALSE</code> rows are the interesting ones — read every mismatch individually rather than only the summary rate.</td></tr>
+            <tr><td class="name">warnings</td><td>Anything the presentation gate discarded, or a note that no presentation was ticked. Review before analysing.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Study summary</h3>
+      <p><code>&lt;prefix&gt;_summary.txt</code> holds the pre-specified analysis, printed to the console as well:</p>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Figure</th><th scope="col">How to read it</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">Observed diagnostic yield</td><td>Proportion of tested patients with any P/LP finding, including <code>Not_modelled</code>, with a 95% confidence interval.</td></tr>
+            <tr><td class="name">Mean predicted p(genetic)</td><td>What the model expected across the same patients. The comparison of these two lines is the study's primary result.</td></tr>
+            <tr><td class="name">Brier score</td><td>Mean squared error of the headline probability against the binary outcome. Lower is better; it penalises confident wrong answers, which a mean comparison alone can hide.</td></tr>
+            <tr><td class="name">Top-1 / top-3 accuracy</td><td>Ranking performance among gene-positive patients whose diagnosis the model can express. <code>Not_modelled</code> cases are excluded from the denominator and reported separately, so nothing disappears silently.</td></tr>
+            <tr><td class="name">Panel sent was flagged</td><td>Eligibility agreement. A low figure is not automatically a model failure — the discordant cases may be patients who were tested outside criteria.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The summary also states plainly whether the predicted mean fell inside, above, or below the observed confidence interval, so the calibration verdict does not depend on reading two numbers side by side.</p>
+    </div>
+  </section>
+
+  <hr>
+
+  <h2>If something goes wrong</h2>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr><th scope="col">Message</th><th scope="col">Cause and fix</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="name">run this from the repository root</td><td>Working directory is wrong. <code>cd</code> to the folder containing <code>data/</code> and <code>R/</code>.</td></tr>
+        <tr><td class="name">input file not found</td><td>Path typo, or the workbook is somewhere else. Pass the full path as the first argument.</td></tr>
+        <tr><td class="name">there is no package called 'openxlsx'</td><td>Run <code>install.packages("openxlsx")</code>.</td></tr>
+        <tr><td class="name">input has no Patient_ID column</td><td>The sheet was read from the wrong row or the wrong sheet. Column names must sit in row 2 of <code>Data Entry</code>; don't delete the row 1 banner.</td></tr>
+        <tr><td class="name">no data rows found</td><td>Every <code>Patient_ID</code> is blank. Data starts at row 3.</td></tr>
+        <tr><td class="name">Fidelity check: N problems found</td><td>App wording and model parameter keys have drifted. Stop; the affected modifier is not being applied. Resolve before trusting results.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>To work interactively instead of through the command line, source the pieces directly:</p>
+<pre><code>source("data/bayes_params.R"); source("data/panels.R")
+source("data/strict_criteria.R"); source("R/bayes.R")
+source("R/eligibility.R");        source("R/batch_score.R")
+
+res  &lt;- batch_score_file("RenalGenetics_Validation_Template.xlsx")
+summ &lt;- summarise_validation(res)</code></pre>
+  <p>If you would rather not depend on <code>openxlsx</code>, export the <code>Data Entry</code> sheet to CSV — keeping the column names as the header row — and pass the data frame straight to <code>batch_score()</code>.</p>
+
+  <hr>
+
+  <h2>Handling the data</h2>
+  <div class="note critical">
+    <span class="note-label">Never commit the outputs</span>
+    <p>Both output files contain patient-level clinical data. <code>.gitignore</code> blocks <code>*_results.csv</code>, <code>*_summary.txt</code> and anything matching <code>validation_*</code>, and the completed template is ignored too — but treat that as a safety net, not permission. Keep extraction files and outputs on approved storage only, and use anonymised identifiers in <code>Patient_ID</code>.</p>
+  </div>
+  <p>On governance: retrospective anonymised extraction by the direct care team for service improvement normally counts as service evaluation rather than research, so no ethics committee approval is needed. That answer changes if the work goes multi-centre or is written up as research. Run the HRA <em>Is my study research?</em> decision tool at the outset and keep the result on file — it takes a few minutes and settles the question before data collection rather than after.</p>
+
+  <footer>
+    <p>Companion to the Bayesian model technical reference. Model version: 24 conditions, 37 HPO terms.</p>
+    <p>The tool is not validated for clinical use — that is what this study is for.</p>
+  </footer>
+
+</div>
