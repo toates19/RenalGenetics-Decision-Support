@@ -5,8 +5,8 @@ type: software
 authors:
   - family-names: Oates
     given-names: Tom
-version: 1.0.2
-date-released: 2026-07-30
+version: 1.0.3
+date-released: 2026-08-11
 url: "https://github.com/toates19/RenalGenetics-Decision-Support"
 abstract: >
   A Shiny-based decision-support tool for non-genetics nephrology
