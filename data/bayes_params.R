@@ -1523,7 +1523,12 @@ biopsy_modifiers <- list(
     NoGenetic=1.0
   ),
 
-  "Tubulointerstitial kidney disease" = list(
+  # Key must match the biopsy_renal checkbox wording in app.R verbatim — findings
+  # are looked up by exact name, so any drift silently disables this modifier.
+  # It was keyed "Tubulointerstitial kidney disease" until 2026-08-11, which no
+  # UI control could ever produce, so the x15 below had never once fired. The UI
+  # string is the load-bearing one: data/strict_criteria.R also matches on it.
+  "Tubulointerstitial fibrosis (no glomerular lesion)" = list(
     PKD1=1.0, PKD2=1.0, ARPKD=1.0,
     Alport_XL=1.0, Alport_AR=1.0, COL4_het=1.0,
     NPHS1=1.0, NPHS2=1.0, INF2=1.0,
