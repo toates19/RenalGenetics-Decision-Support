@@ -56,7 +56,12 @@ RenalGenetics-Decision-Support/
 ├── R/
 │   ├── hpo_extract.R        # Anthropic API call — HPO term extraction
 │   ├── eligibility.R        # Two-layer eligibility scoring logic
-│   └── bayes.R              # Bayesian posterior calculation + Plotly chart
+│   ├── bayes.R              # Bayesian posterior calculation + Plotly chart
+│   └── batch_score.R        # Validation harness — scores a spreadsheet outside Shiny
+├── scripts/
+│   └── run_validation.R     # CLI entry point for the validation batch scorer
+├── docs/
+│   └── validation_howto.html # Guide to running the validation study
 ├── Gene_lists/              # PanelApp TSV exports (green-rated genes)
 ├── Test_criteria.csv        # Source NHS eligibility criteria text
 └── README.md
@@ -186,7 +191,7 @@ Each condition is modelled as a separate entity with its own prior, likelihood r
 | ARPKD | *PKHD1* | Recessive; typically presents in childhood |
 | Alport — X-linked | *COL4A5* | ~85% of Alport; X-linked, affects males most severely |
 | Alport — biallelic | *COL4A3/COL4A4* | ~15% of Alport; autosomal recessive or dominant |
-| COL4 heterozygote | *COL4A3/COL4A4* | Thin basement membrane nephropathy / carrier state; prior 1/106 |
+| COL4 heterozygote | *COL4A3/COL4A4* | Thin basement membrane nephropathy / carrier state; prior 1/3,533 (carrier frequency 1/106 × ~3% ESKF-by-60 penetrance) |
 | FSGS/SRNS — NPHS1 | *NPHS1* | Congenital nephrotic syndrome (nephrin) |
 | FSGS/SRNS — NPHS2 | *NPHS2* | Childhood SRNS (podocin) |
 | FSGS/SRNS — INF2 | *INF2* | AD FSGS; often with Charcot-Marie-Tooth |
@@ -208,7 +213,9 @@ Each condition is modelled as a separate entity with its own prior, likelihood r
 
 CAKUT is intentionally excluded from the Bayesian model. There is no dedicated NHS GT Directory CAKUT panel; genes implicated in CAKUT (PAX2, HNF1B, EYA1, SALL1, RET etc.) are covered by the R257 super-panel. Structural anomaly HPO terms (hydronephrosis, renal dysplasia, horseshoe kidney, VUR) therefore feed R257 eligibility scoring rather than a separate Bayesian condition.
 
-Posterior probabilities are updated from population priors using likelihood ratios for confirmed HPO terms, plus modifiers for family history pattern, consanguinity, age at presentation, sex (Alport XL vs AR discrimination), and biopsy findings (GBM splitting/lamellation, thin basement membrane, FSGS, C3G/MPGN, tubulointerstitial pattern).
+Posterior probabilities are updated from population priors using likelihood ratios for confirmed HPO terms, plus modifiers for family history pattern, consanguinity, age at presentation, sex, and biopsy findings (GBM splitting/lamellation, thin basement membrane, FSGS, C3G/MPGN, tubulointerstitial pattern).
+
+The sex modifier applies to X-linked Alport only (Male 1.25 / Female 0.75), derived from X-linked genotype prevalence × sex-specific penetrance expressed as a ratio to the population average. Heterozygous females outnumber hemizygous males 2:1 for any X-linked allele — what differs is penetrance, not carriage — so the modifier reflects ESKD penetrance (~100% in males vs 30–40% after age 60 in females; Jais *JASN* 2003). Biallelic Alport is autosomal and therefore takes no sex modifier.
 
 **Display:** Output is split into two parts so "is this likely genetic at all" doesn't get conflated with "which condition." A headline stat gives the estimated probability of a modelled genetic cause (`1 − posterior(NoGenetic)`) — this is the one place an exact percentage is shown, since it's a coarse two-way split rather than a 24-way ranking and is more defensible at that precision. Below it, the chart shows the remaining 23 conditions renormalised to sum to 1, ranked by relative posterior *conditional on* a modelled genetic cause being present. Numeric percentages are intentionally not displayed on the chart itself — bar length conveys relative magnitude only; hover shows rank. This split is designed to sit next to the eligibility table above it, so a clinician can compare "eligibility: unlikely" against "estimated probability of genetic cause: X%" directly, rather than inferring the latter from bar length in a single mixed ranking.
 
@@ -283,6 +290,49 @@ The posterior is computed via log-odds Bayesian update: prior odds × product of
 
 ---
 
+## Validation
+
+The model is **not yet validated**. A retrospective blinded case series is in preparation to test it against confirmed genetic results.
+
+**Full instructions: [`docs/validation_howto.html`](docs/validation_howto.html)** — covers data extraction, running the scorer, and interpreting the output. Read that before starting; the summary below is orientation only.
+
+### Design
+
+Consecutive patients who had a renal gene panel sent, extracted blind to the genetic result. Three claims are separable, and only the first two are in scope for this study:
+
+| Claim | Gold standard | Status |
+|---|---|---|
+| Eligibility scoring picks the right panel | Panel actually requested and approved | In scope |
+| Differential ranking puts the true diagnosis on top | Confirmed genetic diagnosis | In scope |
+| Variant interpretation separates causative from incidental P/LP | Specialist MDT adjudication | Deferred — needs a prospective comparison |
+
+The **primary endpoint is calibration**, not ranking accuracy: observed diagnostic yield versus the mean predicted probability of a modelled genetic cause. The model currently implies ~15% at baseline, while enriched nephrology cohorts typically run 20–40%, and that single figure shifts every posterior in the app. Ranking accuracy at pilot size (~100 patients, giving ~30 gene-positive cases) carries a confidence interval too wide to be definitive and is reported as exploratory.
+
+### Running the scorer
+
+`scripts/run_validation.R` runs the eligibility scorer and the Bayesian model over an extraction spreadsheet without going through the Shiny reactive layer — hand-entering 100 patients into the UI is not realistic, and the model was otherwise only reachable through the app's reactive context.
+
+Requires R and the `openxlsx` package, and must be run from the repository root:
+
+```bash
+Rscript scripts/run_validation.R [input.xlsx] [output_prefix]
+```
+
+Defaults to `RenalGenetics_Validation_Template.xlsx` and an output prefix of `validation`. Produces:
+
+- `<prefix>_results.csv` — one row per patient: derived HPO terms, `p_genetic`, the top-3 differential, the rank of the confirmed diagnosis, panels flagged, and whether the panel actually sent was among them
+- `<prefix>_summary.txt` — observed yield with CI, mean predicted `p_genetic`, Brier score, top-1/top-3 accuracy, and eligibility agreement
+
+### Two things to know before trusting a run
+
+**The harness reproduces the app's presentation gating on purpose.** Branch controls such as `haematuria` and `biopsy_haem` only exist once the matching presentation box is ticked, and `inp(id, default)` falls back to the default when a control is absent — so a feature recorded under an unticked presentation is invisible to the app. Scoring such features anyway would flatter the tool under validation. Rows where the gate discards a recorded feature are reported in a `warnings` column rather than failing silently.
+
+**`check_harness_fidelity()` runs before every scoring pass.** Model parameters are looked up by exact string, so any drift between the app's wording and a parameter key disables that modifier silently rather than raising an error. This check compares the two vocabularies and is what surfaced a tubulointerstitial biopsy modifier that had never fired. If it reports a problem, resolve it before trusting the output.
+
+Validation outputs are gitignored — they contain patient-level clinical data and must not be committed.
+
+---
+
 ## How to update panel criteria
 
 Open `data/panels.R`. Each panel is an entry in the `renal_panels` named list:
@@ -291,7 +341,7 @@ Open `data/panels.R`. Each panel is an entry in the `renal_panels` named list:
 - **Update gene lists:** Replace the `genes` vector. Source TSV files from PanelApp; filter to `GEL_Status == 3` (green).
 - **Update strict criteria:** Edit `data/strict_criteria.R`. Each criterion needs `description`, `parameter`, `value`, and `assessable` fields. Supported parameters: `"hpo_terms"`, `"age"`, `"egfr"`, `"proteinuria"`, `"haematuria"`, `"family_history"`, `"extra_renal"`, `"biopsy_results"`, `"ancestry"`, `"clinical_context"`, `"free_text"`.
 - **Modify HPO-level criteria:** Edit the `major_criteria` list in `data/panels.R`. Uses the same parameter names (except `biopsy_results`, `ancestry`, `clinical_context` which are Layer 1 only).
-- **Add a new biopsy finding, ancestry, or clinical context option:** Add the choice string to the relevant `checkboxGroupInput` in `app.R` (inside `output$branch_sections`) and to the `value` field of the criterion in `data/strict_criteria.R`. Strings must match exactly.
+- **Add a new biopsy finding, ancestry, or clinical context option:** Add the choice string to the relevant `checkboxGroupInput` in `app.R` (inside `output$branch_sections`) and to the `value` field of the criterion in `data/strict_criteria.R`. For a **biopsy** finding, also add it as a key in `biopsy_modifiers` in `data/bayes_params.R`. Strings must match exactly across all three files — lookups are by exact name, so a mismatch disables the modifier silently rather than raising an error. `check_harness_fidelity()` in `R/batch_score.R` detects this class of drift.
 - **Add a new branch-specific HPO mapping:** Add the input choice to the `checkboxGroupInput` in `app.R` and the corresponding HPO mapping to `derive_all_hpo_from_inputs()` in `R/bayes.R`.
 
 ---
