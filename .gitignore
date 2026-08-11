@@ -13,3 +13,9 @@ rsconnect/
 .DS_Store
 RenalGenetics_HowToGuide.png
 RenalGenetics_Technical_Briefing_June2026.pdf
+
+# Validation study outputs — contain patient-level clinical data. Never commit.
+*_results.csv
+*_summary.txt
+validation_*.csv
+validation_*.txt
