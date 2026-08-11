@@ -1348,14 +1348,44 @@ names(consanguinity_modifiers$Unknown) <- names(condition_priors)
 
 # -----------------------------------------------------------------------------
 # 5b. SEX MODIFIER (Alport subtype discrimination)
+#
+# Alport_XL (COL4A5) modifiers are derived from X-linked genotype prevalence
+# x sex-specific penetrance, expressed as a ratio to the population average.
+# For an X-linked allele of frequency q, hemizygous males are 0.5q of the
+# population and heterozygous females are q — i.e. females carrying a COL4A5
+# variant OUTNUMBER males 2:1. What differs is penetrance, not carriage.
+# Using ESKD as the endpoint (consistent with the COL4_het prior framing in
+# section 1): males ~100%, females 30-40% after age 60 (Jais et al. JASN 2003,
+# PMID 14514740; n = 195 families).
+#
+#   males   :  q  x 1.00                  = 1.00q
+#   females : 2q  x 0.30                  = 0.60q
+#   pop avg : (1.00q + 0.60q) / 2         = 0.80q
+#   Male    = 1.00q / 0.80q = 1.25   (was 1.8, not derived)
+#   Female  = 0.60q / 0.80q = 0.75   (was 0.6, flagged as too low)
+#
+# Note this is a stricter endpoint than "clinically apparent nephropathy": the
+# same Jais cohort reports haematuria in 95% and proteinuria in 75% of
+# heterozygous females. Under a proteinuria endpoint the modifiers would
+# invert to Male 0.80 / Female 1.20. ESKD framing chosen for consistency with
+# COL4_het; revisit if the tool is ever repositioned around isolated
+# haematuria rather than progressive CKD.
+#
+# Alport_AR (biallelic COL4A3/COL4A4) is AUTOSOMAL — no sex difference in
+# prevalence, so it is 1.0 for both sexes. It previously carried 0.6 (male) /
+# 1.8 (female) as an XL-vs-AR discrimination heuristic; because these are
+# absolute multipliers on the prior, that inflated AR Alport ~1.8x against
+# every non-Alport condition in the differential purely on the basis of sex.
+# XL-vs-AR discrimination is now carried entirely by Alport_XL, which is the
+# only one of the pair with a real sex effect.
 # -----------------------------------------------------------------------------
 sex_alport_modifiers <- list(
   "Male" = list(
     PKD1          = 1.0,
     PKD2          = 1.0,
     ARPKD         = 1.0,
-    Alport_XL     = 1.8,
-    Alport_AR     = 0.6,
+    Alport_XL     = 1.25,
+    Alport_AR     = 1.0,
     COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
@@ -1380,8 +1410,8 @@ sex_alport_modifiers <- list(
     PKD1          = 1.0,
     PKD2          = 1.0,
     ARPKD         = 1.0,
-    Alport_XL     = 0.6,
-    Alport_AR     = 1.8,
+    Alport_XL     = 0.75,
+    Alport_AR     = 1.0,
     COL4_het      = 1.0,
     NPHS1         = 1.0,
     NPHS2         = 1.0,
